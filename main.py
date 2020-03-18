@@ -66,6 +66,12 @@ def get_lesson():
                            form=form)
 
 
+@app.route('/profile')
+def get_profile():
+    form = NewsForm()
+    return render_template('profile.html', title='Профиль', form=form)
+
+
 @app.route('/news', methods=['GET', 'POST'])
 @login_required
 def add_news():

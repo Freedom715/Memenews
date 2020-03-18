@@ -1,19 +1,20 @@
-from flask import Flask, render_template, redirect, request, make_response, session, jsonify
 import datetime
 
-import news_resources
-from data import db_session
-from data.users import User
-from data.news import News
+from flask import Flask, render_template, redirect, request, make_response, session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask_restful import Api
 # from sqlalchemy import or_
 from flask_wtf import FlaskForm
 from werkzeug.exceptions import abort
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
-import news_api
-from flask_restful import Api
+
+import news_resources
+from data import db_session
+from data.news import News
+from data.users import User
+from help_functions import check_password
 
 app = Flask(__name__)
 api = Api(app)
@@ -145,12 +146,21 @@ def login():
 def reqister():
     form = RegisterForm()
     if form.validate_on_submit():
-        if form.password.data != form.password_again.data:
+        if not check_password(form.password.data):
+            if form.password.data != form.password_again.data:
+                return render_template('register.html', title='Регистрация',
+                                       form=form,
+                                       message="Пароли не совпадают")
+        else:
             return render_template('register.html', title='Регистрация',
                                    form=form,
-                                   message="Пароли не совпадают")
+                                   message=check_password(form.password.data))
         session = db_session.create_session()
         if session.query(User).filter(User.email == form.email.data).first():
+            return render_template('register.html', title='Регистрация',
+                                   form=form,
+                                   message="Такой пользователь уже есть")
+        if session.query(User).filter(User.name == form.name.data).first():
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Такой пользователь уже есть")
@@ -214,12 +224,10 @@ def session_test():
 
 def main():
     db_session.global_init("db/blogs.sqlite")
-    #app.register_blueprint(news_api.blueprint)
+    # app.register_blueprint(news_api.blueprint)
     api.add_resource(news_resources.NewsListResource, '/api/v2/news')
     api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
     app.run()
-
-
 
 
 if __name__ == '__main__':

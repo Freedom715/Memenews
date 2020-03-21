@@ -47,6 +47,10 @@ class NewsForm(FlaskForm):
     submit = SubmitField('Применить')
 
 
+class Profile_form(FlaskForm):
+    name = 'User'
+
+
 @login_manager.user_loader
 def load_user(user_id):
     session = db_session.create_session()
@@ -66,10 +70,17 @@ def get_lesson():
                            form=form)
 
 
-@app.route('/profile')
-def get_profile():
+@app.route('/profile/<user_id>')
+def get_profile(user_id):
     form = NewsForm()
+    session = db_session.create_session()
+    user = session.query(User).filter(User.id == user_id)[0]
+    form.name = user.name
     return render_template('profile.html', title='Профиль', form=form)
+
+@app.route('/profile')
+def return_profile():
+    return redirect(f'/profile/{current_user.id}')
 
 
 @app.route('/news', methods=['GET', 'POST'])

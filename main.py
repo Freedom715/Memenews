@@ -63,6 +63,12 @@ def not_found(error):
 '''
 
 
+@app.route('/params')  # TODO
+def get_params():
+    form = NewsForm()
+    return render_template('parameters.html', title='Параметры', form=form)
+
+
 @app.route('/profile/<user_id>')
 def get_profile(user_id):
     form = NewsForm()

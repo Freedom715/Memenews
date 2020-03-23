@@ -13,9 +13,15 @@
 <header>
     <nav class="navbar navbar-light bg-light">
         <a class="navbar-brand" href="/">Наше приложение</a>
+        <a class="navbar-brand" href="/">К ленте</a>
         {% if current_user.is_authenticated %}
-    <a class="navbar-brand" href="/profile">{{ current_user.name}}</a>
-    {% else %}
+        <a class="navbar-brand" href="/peoples">Люди</a>
+        <a class="navbar-brand" href="/profile/{{current_user.id}}">
+            <img src={{current_user.avatar_url}}
+                 width="50" height="50"
+                 alt="PEP8" class="d-inline-block align-top"> {{current_user.name}}
+        </a>
+        {% else %}
         <p>
             <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
             <a class="btn btn-success" href="/login">Войти</a>

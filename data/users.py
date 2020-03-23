@@ -1,4 +1,5 @@
 import datetime
+
 import sqlalchemy
 from flask_login import UserMixin
 from sqlalchemy import orm
@@ -20,6 +21,11 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                      default=datetime.datetime.now)
+    friends = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    avatar_url = sqlalchemy.Column(sqlalchemy.String,
+                                   default='https://avatars.mds.yandex.net/get-pdb/1397410/01ade79e-979d-4177-8a49-7b21e8857e99/s1200?webp=false')
+    liked_news = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=True)
+    liked_photos = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=True)
     news = orm.relation("News", back_populates='user')
 
     def __repr__(self):

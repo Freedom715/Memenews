@@ -63,13 +63,6 @@ def not_found(error):
 '''
 
 
-@app.route('/lesson')
-def get_lesson():
-    form = NewsForm()
-    return render_template('register.html', title='Регистрация',
-                           form=form)
-
-
 @app.route('/profile/<user_id>')
 def get_profile(user_id):
     form = NewsForm()
@@ -77,6 +70,7 @@ def get_profile(user_id):
     user = session.query(User).filter(User.id == user_id)[0]
     form.name = user.name
     return render_template('profile.html', title='Профиль', form=form)
+
 
 @app.route('/profile')
 def return_profile():
@@ -208,7 +202,14 @@ def index():
             (News.user == current_user) | (News.is_private != True))
     else:
         news = session.query(News).filter(News.is_private != True)
-    return render_template("index.html", news=news)
+    return render_template("index.html", news=news, title='Лента')
+
+
+@app.route("/peoples")
+def get_peoples():
+    session = db_session.create_session()
+    users = session.query(User)
+    return render_template("peoples.html", users=users, title='Люди')
 
 
 @app.route("/cookie_test")
@@ -240,7 +241,7 @@ def session_test():
 
 
 def main():
-    db_session.global_init("db/blogs.sqlite")
+    db_session.global_init("db/Memenews.sqlite")
     # app.register_blueprint(news_api.blueprint)
     api.add_resource(news_resources.NewsListResource, '/api/v2/news')
     api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')

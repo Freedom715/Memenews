@@ -15,7 +15,10 @@
         {% endfor %}
     </p>
     <p>
-        {{ form.password.label }}<br>
+        <p title="Правила пароля: 1) Длинна пароля больше 8 символов
+                                  2) В пароле должны быть буквы разного уровня
+                                  3) В пароле должна быть хоть одна цифра или буква">{{ form.password.label }} *</p>
+
         {{ form.password(class="form-control", type="password") }}<br>
         {% for error in form.password.errors %}
             <p class="alert alert-danger" role="alert">
@@ -41,16 +44,7 @@
             </p>
         {% endfor %}
     </p>
-    <p>
-        {{ form.about.label }}<br>
-        {{ form.about(class="form-control") }}<br>
-        {% for error in form.about.errors %}
-            <p class="alert alert-danger" role="alert">
-                {{ error }}
-            </p>
-        {% endfor %}
-    </p>
     <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-    {{message}}
+    <p>{{message}} </p>
 </form>
 {% endblock %}

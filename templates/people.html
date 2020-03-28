@@ -2,23 +2,29 @@
 
 {% block content %}
 <h1>Люди</h1>
-<div>
-    Поиск <input type="text"> <input class="btn btn-secondary" type="submit" value="Submit">
-    <div class="btn-group btn-group-toggle" data-toggle="buttons">
-        <label class="btn btn-secondary">
-            <input type="radio" name="options" id="username"> Nickname
-        </label>
-        <label class="btn btn-secondary">
-            <input type="radio" name="options" id="user_id" checked> ID
-        </label>
+<div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <div class="input-group-text" id="btnGroupAddon">@</div>
+        </div>
+        <input type="text" class="form-control" placeholder="Введите имя" aria-label="Введите имя"
+               aria-describedby="btnGroupAddon">
     </div>
+    <div class="btn-group mr-2" role="group" aria-label="First group">
+        <input class="btn btn-secondary" type="submit" value="Submit">
+    </div>
+    <div class="btn-group" role="group" aria-label="Third group">
+        <button type="radio" class="btn btn-secondary checked">Nickname</button>
+        <button type="radio" class="btn btn-secondary">ID</button>
+    </div>
+</div>
 </div>
 {% for item in users%}
 <div class="col-md6 border rounded">
     <div>
         <div class="media">
             <img src={{item.avatar_url}} class="align-self-start mr-3" alt={{item.name}} width="125"
-                                                     height="125">
+                 height="125">
             <div class="media-body">
                 <h3 class="mt-0"><a href="/profile/{{ item.id }}"> {{item.name}} </a></h3>
                 <h5 class="mt-1">Статус: {{item.about}}</h5>

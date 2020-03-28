@@ -14,12 +14,13 @@
         <a href="/news_delete/{{ item.id }}" class="btn btn-danger">Удалить</a>
     </div>
     {% endif %}
-    <div>
+    <div style="color: white">
         {{item.content}}
     </div>
-    <div>
+    <div style="color: white">
         Автор - {{item.user.name}}, Дата написания - {{item.created_date}}
     </div>
 </div>
+
 {% endfor %}
 {% endblock %}

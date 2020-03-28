@@ -47,8 +47,9 @@ class NewsForm(FlaskForm):
     submit = SubmitField('Применить')
 
 
-class Profile_form(FlaskForm):
+class ProfileForm(FlaskForm):
     name = 'User'
+    user = current_user
 
 
 @login_manager.user_loader
@@ -74,7 +75,7 @@ def get_profile(user_id):
     form = NewsForm()
     session = db_session.create_session()
     user = session.query(User).filter(User.id == user_id)[0]
-    form.name = user.name
+    form.user = user
     return render_template('profile.html', title='Профиль', form=form)
 
 

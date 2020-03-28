@@ -1,7 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Профиль {{form.name}}</h1>
+<div class="media">
+  <img src={{form.user.avatar_url}} class="align-self-start mr-3" alt={{form.user.name}} width="200"
+  height="200">
+  <div class="media-body">
+    <h1 class="mt-0">{{form.user.name}}</h1>
+    <p>Статус: {{form.user.about}}</p>
+  </div>
+</div>
 <div class="alert alert-danger" role="alert"> Катя, твоя задача - вот эта страница </div>
 <a href="/logout" class="btn btn-warning">Выход</a>
 <a href="/params" class="btn btn-alert">Насторйки</a>

@@ -2,14 +2,33 @@
 
 {% block content %}
 <div class="media">
-  <img src={{form.user.avatar_url}} class="align-self-start mr-3" alt={{form.user.name}} width="200"
-  height="200">
-  <div class="media-body">
-    <h1 class="mt-0">{{form.user.name}}</h1>
-    <p>Статус: {{form.user.about}}</p>
-  </div>
+    <img src={{form.user.avatar_url}} class="align-self-start mr-3" alt={{form.user.name}}
+         width="200"
+         height="200" onclick="">
+    <div class="media-body">
+        <h1 class="mt-0">{{form.user.name}}</h1>
+        <p>Статус: {{form.user.about}}</p>
+    </div>
 </div>
-<div class="alert alert-danger" role="alert"> Катя, твоя задача - вот эта страница </div>
+<div class="alert alert-danger" role="alert"> Катя, твоя задача - вот эта страница</div>
+<h2> Друзья </h2>
+{% if form.error == '' %}
+{% for item in form.friends %}
+<div class="media">
+    <a href="{{item.id}}"> <img src="{{item.avatar_url}}" class="align-self-start mr-3"
+                                        alt="PEP8" width="50" height="50" title="{{item.name}}"> </a>
+    <div class="media-body">
+        <h5 class="mt-0">{{item.name}}</h5>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<h4 style="color:red"> {{form.error}} </h4>
+{% endif %}
+{% if form.user.id == form.cur_user.id %}
 <a href="/logout" class="btn btn-warning">Выход</a>
-<a href="/params" class="btn btn-alert">Насторйки</a>
+{% else %}
+<a href="#" class="btn btn-warning"> Добавить в друзья </a>
+{% endif %}
+<a href="/params" class="btn btn-secondary">Насторойки</a>
 {% endblock %}

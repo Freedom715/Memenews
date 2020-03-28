@@ -50,6 +50,9 @@ class NewsForm(FlaskForm):
 class ProfileForm(FlaskForm):
     name = 'User'
     user = current_user
+    cur_user = current_user
+    friends = [current_user]
+    error = ''
 
 
 @login_manager.user_loader
@@ -72,10 +75,17 @@ def get_params():
 
 @app.route('/profile/<user_id>')
 def get_profile(user_id):
-    form = NewsForm()
+    form = ProfileForm()
     session = db_session.create_session()
     user = session.query(User).filter(User.id == user_id)[0]
     form.user = user
+    friend = [] if user.friends is None else user.friends.split(', ')
+    if len(friend) > 0:
+        friends = session.query(User).filter(User.id.in_(friend))
+        form.friends = friends
+    else:
+        form.friends = []
+        form.error = 'Этот пользователь пока одинок. Напиши ему, может подружитесь.'
     return render_template('profile.html', title='Профиль', form=form)
 
 

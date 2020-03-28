@@ -10,7 +10,6 @@
         <p>Статус: {{form.user.about}}</p>
     </div>
 </div>
-<div class="alert alert-danger" role="alert"> Катя, твоя задача - вот эта страница</div>
 <h2> Друзья </h2>
 {% if form.error == '' %}
 {% for item in form.friends %}
@@ -28,7 +27,7 @@
 {% if form.user.id == form.cur_user.id %}
 <a href="/logout" class="btn btn-warning">Выход</a>
 {% else %}
-<a href="#" class="btn btn-warning"> Добавить в друзья </a>
+<a href="/add_friend/{{form.user.id}}" class="btn btn-warning"> Добавить в друзья </a>
 {% endif %}
-<a href="/params" class="btn btn-secondary">Насторойки</a>
+<a href="/settings" class="btn btn-secondary">Настройки</a>
 {% endblock %}

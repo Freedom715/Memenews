@@ -55,6 +55,22 @@ class ProfileForm(FlaskForm):
     error = ''
 
 
+@app.route('/add_friend/<int:user_id>', methods=['GET', 'POST'])
+def add_friend(user_id):
+    if user_id != current_user.id:
+        session = db_session.create_session()
+        user = session.query(User).filter(User.id == current_user.id).first()
+        if ', ' not in user.friends and current_user.friends == '':
+            user.friends = "'" + str(user_id) + "'"
+        elif ', ' not in user.friends and current_user.friends != '':
+            user.friends = "'" + user.friends.strip("'") + ', ' + str(user_id) + "'"
+        else:
+            user.friends = user.friends[:-1] + ', ' + str(user_id) + "'"
+        print(user.friends)
+        session.commit()
+    return redirect(f'/profile/{user_id}')
+
+
 @login_manager.user_loader
 def load_user(user_id):
     session = db_session.create_session()
@@ -67,10 +83,10 @@ def not_found(error):
 '''
 
 
-@app.route('/params')  # TODO
+@app.route('/settings')  # TODO
 def get_params():
     form = NewsForm()
-    return render_template('parameters.html', title='Параметры', form=form)
+    return render_template('settings.html', title='Параметры', form=form)
 
 
 @app.route('/profile/<user_id>')
@@ -79,9 +95,11 @@ def get_profile(user_id):
     session = db_session.create_session()
     user = session.query(User).filter(User.id == user_id)[0]
     form.user = user
-    friend = [] if user.friends is None else user.friends.split(', ')
+    friend = '' if user.friends is None else user.friends
+    print(friend.split(', '))
     if len(friend) > 0:
-        friends = session.query(User).filter(User.id.in_(friend))
+        friends = session.query(User).filter(User.id.in_(friend.strip("'").split(', ')))
+        print(friends.all())
         form.friends = friends
     else:
         form.friends = []
@@ -222,11 +240,11 @@ def index():
     return render_template("index.html", news=news, title='Лента')
 
 
-@app.route("/peoples")
-def get_peoples():
+@app.route("/people")
+def get_people():
     session = db_session.create_session()
     users = session.query(User)
-    return render_template("peoples.html", users=users, title='Люди')
+    return render_template("people.html", users=users, title='Люди')
 
 
 @app.route("/cookie_test")

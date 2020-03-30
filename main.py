@@ -24,6 +24,12 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
+class BaseForm(FlaskForm):
+    background = 'https://avatars.mds.yandex.net/get-pdb/1947635/6706b408-eb97-49ce-9133-cf95447c9301/s1200'
+    light_dark = 'white'
+    back = '#0a0a0a'
+
+
 class RegisterForm(FlaskForm):
     email = EmailField('Почта', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
@@ -62,9 +68,19 @@ class UsersForm(FlaskForm):
 
 class SettingForm(FlaskForm):
     avatar = StringField('Смена аватара')
-    name = StringField('User')
-    status = StringField('Нет статуса')
+    name = StringField('Смена ника')
+    status = StringField('Смена статуса')
+    background = StringField('Смена заднего фона')
+    theme = BooleanField("Тёмная\светлая тема")
     submit = SubmitField('Применить')
+
+
+def get_base():
+    base = BaseForm()
+    base.background = current_user.background
+    base.light_dark = 'white' if not current_user.theme else 'black'
+    base.back = '#0a0a0a' if not current_user.theme else '#f5f5f5'
+    return base
 
 
 @app.route('/add_friend/<int:user_id>', methods=['GET', 'POST'])
@@ -89,7 +105,7 @@ def load_user(user_id):
     return session.query(User).get(user_id)
 
 
-@app.route('/settings', methods=['GET', 'POST'])  # TODO
+@app.route('/settings', methods=['GET', 'POST'])
 def get_settings():
     form = SettingForm()
     if form.validate_on_submit():
@@ -101,8 +117,11 @@ def get_settings():
             user.name = form.name.data
         if form.status.data:
             user.about = form.status.data
+        if form.background.data:
+            user.background = form.background.data
+        user.theme = form.theme.data
         session.commit()
-    return render_template('settings.html', title='Параметры', form=form)
+    return render_template('settings.html', title='Параметры', form=form, base=get_base())
 
 
 @app.route('/profile/<user_id>')
@@ -118,7 +137,7 @@ def get_profile(user_id):
     else:
         form.friends = []
         form.error = 'Этот пользователь пока одинок. Напиши ему, может подружитесь.'
-    return render_template('profile.html', title='Профиль', form=form)
+    return render_template('profile.html', title='Профиль', form=form, base=get_base())
 
 
 @app.route('/profile')
@@ -141,7 +160,7 @@ def add_news():
         session.commit()
         return redirect('/')
     return render_template('news.html', title='Добавление новости',
-                           form=form)
+                           form=form, base=get_base())
 
 
 @app.route('/people/find/<userfind>', methods=['GET', 'POST'])
@@ -180,7 +199,7 @@ def edit_news(id):
             return redirect('/')
         else:
             abort(404)
-    return render_template('news.html', title='Редактирование новости', form=form)
+    return render_template('news.html', title='Редактирование новости', form=form, base=get_base())
 
 
 @app.route("/people", methods=["GET", "POST"])
@@ -191,7 +210,7 @@ def get_people():
         redirect('/profile')
     session = db_session.create_session()
     users = session.query(User)
-    return render_template("people.html", form=form, users=users, title='Люди')
+    return render_template("people.html", form=form, users=users, title='Люди', base=get_base())
 
 
 @app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
@@ -220,7 +239,7 @@ def login():
         return render_template('login.html',
                                message="Неправильный логин или пароль",
                                form=form)
-    return render_template('login.html', title='Авторизация', form=form)
+    return render_template('login.html', title='Авторизация', form=form, base=get_base())
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -254,7 +273,7 @@ def reqister():
         session.add(user)
         session.commit()
         return redirect('/login')
-    return render_template('register.html', title='Регистрация', form=form)
+    return render_template('register.html', title='Регистрация', form=form, base=get_base())
 
 
 @app.route('/logout')
@@ -272,7 +291,7 @@ def index():
             (News.user == current_user) | (News.is_private != True))
     else:
         news = session.query(News).filter(News.is_private != True)
-    return render_template("index.html", news=news, title='Лента')
+    return render_template("index.html", news=news, title='Лента', base=get_base())
 
 
 @app.route("/cookie_test")

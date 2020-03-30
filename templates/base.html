@@ -9,16 +9,12 @@
           crossorigin="anonymous">
     <title>{{title}}</title>
     <style>
-    .people {background-color: #0a0a0a}
+    .people {background-color: {{ base.back }}}
    BODY {
     font-family: Arial, Helvetica, sans-serif; /* Гарнитура шрифта */
-    color: white;
-    background-image: url(https://avatars.mds.yandex.net/get-pdb/1947635/6706b408-eb97-49ce-9133-cf95447c9301/s1200); /* Путь к фоновому изображению */
+    color: {{ base.light_dark }};
+    background-image: url({{ base.background }}); /* Путь к фоновому изображению */
    }
-   P {
-    font-family: Arial, Helvetica, sans-serif; /* Гарнитура шрифта */
-    color: white;
-    }
    .div1 {
     margin: 2.0em 0em 0em;
     }

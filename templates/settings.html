@@ -5,23 +5,37 @@
 <form action="" method="post">
     {{ form.hidden_tag() }}
     <div class="div1">
-            {{ form.avatar.label }}
+        {{ form.avatar.label }}
         <div class="input-group">
             {{ form.avatar(class="form-control") }}
         </div>
     </div>
     <div class="div1">
-            {{ form.name.label }}
+        {{ form.name.label }}
         <div class="input-group" id="set1">
             {{ form.name(class="form-control") }}
         </div>
     </div>
     <div class="div1">
-            {{ form.status.label }}
+        {{ form.status.label }}
         <div class="input-group">
             {{ form.status(class="form-control") }}
         </div>
     </div>
-            {{ form.submit(type="submit", class="btn btn-secondary") }}
+    <div class="div1">
+        {{ form.background.label }}
+        <div class="input-group">
+            {{ form.background(class="form-control") }}
+        </div>
+    </div>
+    <div class="div1">
+        {{ form.theme.label }}
+        <div class="input-group">
+            {{ form.theme(class="form-control") }}
+        </div>
+    </div>
+    <div class="div1">
+        {{ form.submit(type="submit", class="btn btn-secondary") }}
+    </div>
 </form>
 {% endblock %}

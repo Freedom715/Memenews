@@ -60,6 +60,9 @@ class UsersForm(FlaskForm):
     submit = SubmitField('Найти')
 
 
+class SettingForm(FlaskForm):
+    avatar = ''
+
 @app.route('/add_friend/<int:user_id>', methods=['GET', 'POST'])
 def add_friend(user_id):
     if user_id != current_user.id:

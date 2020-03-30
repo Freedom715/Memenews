@@ -5,6 +5,7 @@
 <div class="btn-toolbar justify-content-between" role="toolbar"
      aria-label="Toolbar with button groups">
     <form action="" method="post">
+        {{ form.hidden_tag() }}
         <div class="input-group">
             {{ form.find_string(class="form-control") }}
             {{ form.submit(type="submit", class="btn btn-secondary") }}

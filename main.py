@@ -61,7 +61,11 @@ class UsersForm(FlaskForm):
 
 
 class SettingForm(FlaskForm):
-    avatar = ''
+    avatar = StringField('Смена аватара')
+    name = StringField('User')
+    status = StringField('Нет статуса')
+    submit = SubmitField('Применить')
+
 
 @app.route('/add_friend/<int:user_id>', methods=['GET', 'POST'])
 def add_friend(user_id):
@@ -85,9 +89,19 @@ def load_user(user_id):
     return session.query(User).get(user_id)
 
 
-@app.route('/settings')  # TODO
-def get_params():
-    form = NewsForm()
+@app.route('/settings', methods=['GET', 'POST'])  # TODO
+def get_settings():
+    form = SettingForm()
+    if form.validate_on_submit():
+        session = db_session.create_session()
+        user = session.query(User).filter(User.id == current_user.id).first()
+        if form.avatar.data:
+            user.avatar_url = form.avatar.data
+        if form.name.data:
+            user.name = form.name.data
+        if form.status.data:
+            user.about = form.status.data
+        session.commit()
     return render_template('settings.html', title='Параметры', form=form)
 
 
@@ -95,7 +109,7 @@ def get_params():
 def get_profile(user_id):
     form = ProfileForm()
     session = db_session.create_session()
-    user = session.query(User).filter(User.id == user_id)[0]
+    user = session.query(User).filter(User.id == user_id).first()
     form.user = user
     friend = '' if user.friends is None else user.friends
     if len(friend) > 0:

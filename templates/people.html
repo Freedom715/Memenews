@@ -2,18 +2,15 @@
 
 {% block content %}
 <h1>Люди</h1>
-<div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
-    <div class="input-group">
-        <div class="input-group-prepend">
-            <div class="input-group-text" id="btnGroupAddon">@</div>
+<div class="btn-toolbar justify-content-between" role="toolbar"
+     aria-label="Toolbar with button groups">
+    <form action="" method="post">
+        <div class="input-group">
+            {{ form.find_string(class="form-control") }}
+            {{ form.submit(type="submit", class="btn btn-secondary") }}
         </div>
-        <input type="text" class="form-control" placeholder="Введите имя" aria-label="Введите имя"
-               aria-describedby="btnGroupAddon">
-    </div>
-    <div class="btn-group mr-2" role="group" aria-label="First group">
-        <input class="btn btn-secondary" type="submit" value="Submit">
-    </div>
-    <div class="btn-group" role="group" aria-label="Third group">
+    </form>
+    <div class="btn-group mp-3" role="group" aria-label="Third group">
         <button type="radio" class="btn btn-secondary checked">Nickname</button>
         <button type="radio" class="btn btn-secondary">ID</button>
     </div>

@@ -10,24 +10,28 @@
         <p>Статус: {{form.user.about}}</p>
     </div>
 </div>
-<h2> Друзья </h2>
-{% if form.error == '' %}
-{% for item in form.friends %}
-<div class="media">
-    <a href="{{item.id}}"> <img src="{{item.avatar_url}}" class="align-self-start mr-3"
-                                        alt="PEP8" width="50" height="50" title="{{item.name}}"> </a>
-    <div class="media-body">
-        <h5 class="mt-0">{{item.name}}</h5>
+<div class="div1">
+    <h2> Друзья </h2>
+    {% if form.error == '' %}
+    {% for item in form.friends %}
+    <div class="media">
+        <a href="{{item.id}}"> <img src="{{item.avatar_url}}" class="align-self-start mr-3"
+                                    alt="PEP8" width="50" height="50" title="{{item.name}}"> </a>
+        <div class="media-body">
+            <h5 class="mt-0">{{item.name}}</h5>
+        </div>
     </div>
+    {% endfor %}
+    {% else %}
+    <h4 style="color:red"> {{form.error}} </h4>
+    {% endif %}
 </div>
-{% endfor %}
-{% else %}
-<h4 style="color:red"> {{form.error}} </h4>
-{% endif %}
-{% if form.user.id == form.cur_user.id %}
-<a href="/logout" class="btn btn-warning">Выход</a>
-{% else %}
-<a href="/add_friend/{{form.user.id}}" class="btn btn-warning"> Добавить в друзья </a>
-{% endif %}
-<a href="/settings" class="btn btn-secondary">Настройки</a>
+<div class="div1">
+    {% if form.user.id == form.cur_user.id %}
+    <a href="/logout" class="btn btn-warning">Выход</a>
+    {% else %}
+    <a href="/add_friend/{{form.user.id}}" class="btn btn-warning"> Добавить в друзья </a>
+    {% endif %}
+    <a href="/settings" class="btn btn-secondary">Настройки</a>
+</div>
 {% endblock %}

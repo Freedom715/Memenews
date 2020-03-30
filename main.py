@@ -55,6 +55,11 @@ class ProfileForm(FlaskForm):
     error = ''
 
 
+class UsersForm(FlaskForm):
+    find_string = StringField('Поиск', validators=[DataRequired()])
+    submit = SubmitField('Найти')
+
+
 @app.route('/add_friend/<int:user_id>', methods=['GET', 'POST'])
 def add_friend(user_id):
     if user_id != current_user.id:
@@ -90,10 +95,8 @@ def get_profile(user_id):
     user = session.query(User).filter(User.id == user_id)[0]
     form.user = user
     friend = '' if user.friends is None else user.friends
-    print(friend.split(', '))
     if len(friend) > 0:
         friends = session.query(User).filter(User.id.in_(friend.strip("'").split(', ')))
-        print(friends.all())
         form.friends = friends
     else:
         form.friends = []
@@ -124,6 +127,16 @@ def add_news():
                            form=form)
 
 
+@app.route('/people/find/<userfind>', methods=['GET', 'POST'])
+def user_find(userfind):
+    form = UsersForm()
+    if request.method == 'GET':
+        session = db_session.create_session()
+        print('Ok')
+    if form.validate_on_submit():
+        print('send')
+
+
 @app.route('/news/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_news(id):
@@ -151,6 +164,17 @@ def edit_news(id):
         else:
             abort(404)
     return render_template('news.html', title='Редактирование новости', form=form)
+
+
+@app.route("/people", methods=["GET", "POST"])
+def get_people():
+    form = UsersForm()
+    if form.validate_on_submit():
+        print(form.find_string.data)
+        redirect('/profile')
+    session = db_session.create_session()
+    users = session.query(User)
+    return render_template("people.html", form=form, users=users, title='Люди')
 
 
 @app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
@@ -232,13 +256,6 @@ def index():
     else:
         news = session.query(News).filter(News.is_private != True)
     return render_template("index.html", news=news, title='Лента')
-
-
-@app.route("/people")
-def get_people():
-    session = db_session.create_session()
-    users = session.query(User)
-    return render_template("people.html", users=users, title='Люди')
 
 
 @app.route("/cookie_test")

@@ -28,6 +28,7 @@ class BaseForm(FlaskForm):
     background = 'https://avatars.mds.yandex.net/get-pdb/1947635/6706b408-eb97-49ce-9133-cf95447c9301/s1200'
     light_dark = 'white'
     back = '#0a0a0a'
+    back_color = 'black'
 
 
 class RegisterForm(FlaskForm):
@@ -77,9 +78,11 @@ class SettingForm(FlaskForm):
 
 def get_base():
     base = BaseForm()
-    base.background = current_user.background
-    base.light_dark = 'white' if not current_user.theme else 'black'
-    base.back = '#0a0a0a' if not current_user.theme else '#f5f5f5'
+    if current_user.is_authenticated:
+        base.background = current_user.background
+        base.light_dark = 'white' if not current_user.theme else 'black'
+        base.back = '#0a0a0a' if not current_user.theme else '#f5f5f5'
+        base.back_color = 'black' if not current_user.theme else 'white'
     return base
 
 

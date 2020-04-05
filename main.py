@@ -1,12 +1,15 @@
 import datetime
+import os
 
-from flask import Flask, render_template, redirect, request, make_response, session
+from flask import Flask, render_template, redirect, request, make_response, session, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import Api
 # from sqlalchemy import or_
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileRequired, FileField
 from werkzeug.exceptions import abort
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField
+from werkzeug.utils import secure_filename
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, FileField
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 
@@ -14,7 +17,7 @@ import news_resources
 from data import db_session
 from data.news import News
 from data.users import User
-from help_functions import check_password
+from functions import check_password
 
 app = Flask(__name__)
 api = Api(app)
@@ -25,10 +28,11 @@ login_manager.init_app(app)
 
 
 class BaseForm(FlaskForm):
-    background = 'https://avatars.mds.yandex.net/get-pdb/1947635/6706b408-eb97-49ce-9133-cf95447c9301/s1200'
-    light_dark = 'white'
+    background = ""
+    text_color = 'white'
     back = '#0a0a0a'
     back_color = 'black'
+    font_white = "white"
 
 
 class RegisterForm(FlaskForm):
@@ -36,7 +40,7 @@ class RegisterForm(FlaskForm):
     password = PasswordField('Пароль', validators=[DataRequired()])
     password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
     name = StringField('Имя пользователя', validators=[DataRequired()])
-    about = TextAreaField("Немного о себе")
+    status = TextAreaField("Немного о себе")
     submit = SubmitField('Войти')
 
 
@@ -68,10 +72,11 @@ class UsersForm(FlaskForm):
 
 
 class SettingForm(FlaskForm):
-    avatar = StringField('Смена аватара')
+    avatar = FileField(label="Аватар")
     name = StringField('Смена ника')
     status = StringField('Смена статуса')
-    background = StringField('Смена заднего фона')
+    use_background = BooleanField("Использовать фон", default=False)
+    background = FileField(label="Фон")
     theme = BooleanField("Тёмная\светлая тема")
     submit = SubmitField('Применить')
 
@@ -79,10 +84,16 @@ class SettingForm(FlaskForm):
 def get_base():
     base = BaseForm()
     if current_user.is_authenticated:
+        print(current_user.theme)
         base.background = current_user.background
-        base.light_dark = 'white' if not current_user.theme else 'black'
+        base.text_color = 'white' if not current_user.theme else 'black'
         base.back = '#0a0a0a' if not current_user.theme else '#f5f5f5'
         base.back_color = 'black' if not current_user.theme else 'white'
+    else:
+        base.background = ""
+        base.text_color = 'black'
+        base.back = '#0a0a0a'
+        base.back_color = 'white'
     return base
 
 
@@ -108,30 +119,52 @@ def load_user(user_id):
     return session.query(User).get(user_id)
 
 
-@app.route('/settings', methods=['GET', 'POST'])
+@app.route('/settings', methods=["GET", "POST"])
 def get_settings():
-    form = SettingForm()
-    if form.validate_on_submit():
-        session = db_session.create_session()
-        user = session.query(User).filter(User.id == current_user.id).first()
-        if form.avatar.data:
-            user.avatar_url = form.avatar.data
-        if form.name.data:
-            user.name = form.name.data
-        if form.status.data:
-            user.about = form.status.data
-        if form.background.data:
-            user.background = form.background.data
-        user.theme = form.theme.data
+    form1 = SettingForm()
+    session = db_session.create_session()
+    user = session.query(User).filter(User.id == current_user.id).first()
+    js = url_for("static", filename="js/bs-custom-file-input.js")
+    if request.method == "GET":
+        return render_template('settings.html', title='Параметры', form=form1, base=get_base(),
+                               user=user, js=js)
+    elif request.method == "POST":
+        avatar = request.files.get("avatar")
+        username = request.form.get("username")
+        status = request.form.get("status")
+        background = request.files.get("background")
+        theme = request.form.get("theme")
+        if username:
+            user.name = username
+        if status:
+            user.status = status
+        if background:
+            f = background
+            filename = secure_filename(f.filename)
+            print(filename)
+            f.save("static\\img\\backgrounds\\" + filename)
+            user.background = url_for("static", filename=f"img/backgrounds/{filename}")
+        if avatar:
+            f = avatar
+            filename = secure_filename(f.filename)
+            f.save("static\\img\\avatars\\" + filename)
+            user.avatar = url_for("static", filename=f"/img/avatars/{filename}")
+        if theme == "0":
+            user.theme = False
+            print(user.theme)
+        elif theme == "1":
+            user.theme = True
+            print(user.theme)
+
         session.commit()
-    return render_template('settings.html', title='Параметры', form=form, base=get_base())
+        return redirect(f'/profile/{current_user.id}')
 
 
 @app.route('/profile/<user_id>')
 def get_profile(user_id):
     form = ProfileForm()
     session = db_session.create_session()
-    user = session.query(User).filter(User.id == user_id).first()
+    user = session.query(User).filter(User.id == current_user.id).first()
     form.user = user
     friend = '' if user.friends is None else user.friends
     if len(friend) > 0:
@@ -162,7 +195,7 @@ def add_news():
         session.merge(current_user)
         session.commit()
         return redirect('/')
-    return render_template('news.html', title='Добавление новости',
+    return render_template('add_post.html', title='Добавление новости',
                            form=form, base=get_base())
 
 
@@ -202,7 +235,7 @@ def edit_news(id):
             return redirect('/')
         else:
             abort(404)
-    return render_template('news.html', title='Редактирование новости', form=form, base=get_base())
+    return render_template('add_post.html', title='Редактирование новости', form=form, base=get_base())
 
 
 @app.route("/people", methods=["GET", "POST"])
@@ -270,7 +303,7 @@ def reqister():
         user = User(
             name=form.name.data,
             email=form.email.data,
-            about=form.about.data
+            status=form.status.data
         )
         user.set_password(form.password.data)
         session.add(user)

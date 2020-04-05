@@ -15,14 +15,14 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
     name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    about = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    status = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     email = sqlalchemy.Column(sqlalchemy.String,
                               index=True, unique=True, nullable=True)
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                      default=datetime.datetime.now)
     friends = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    avatar_url = sqlalchemy.Column(sqlalchemy.String,
+    avatar = sqlalchemy.Column(sqlalchemy.String,
                                    default='https://avatars.mds.yandex.net/get-pdb/1397410/01ade79e-979d-4177-8a49-7b21e8857e99/s1200?webp=false')
     liked_news = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=True)
     liked_photos = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=True)

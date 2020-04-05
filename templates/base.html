@@ -9,11 +9,11 @@
           crossorigin="anonymous">
     <title>{{title}}</title>
     <style>
-    .people {background-color: {{ base.back }}}
+    .people {background-color: {{ base.back_color }}}
    BODY {
     font-family: Arial, Helvetica, sans-serif; /* Гарнитура шрифта */
-    color: {{ base.light_dark }};
-    background-image: url({{ base.background }}); /* Путь к фоновому изображению */
+    color: {{ base.text_color }};
+    background-image: url({{ base.background }});8ij /* Путь к фоновому изображению */
     background-color: {{ base.back_color }}
    }
    .div1 {
@@ -30,7 +30,7 @@
         {% if current_user.is_authenticated %}
         <a class="navbar-brand" href="/people">Люди</a>
         <a class="navbar-brand" href="/profile/{{current_user.id}}">
-            <img src={{current_user.avatar_url}}
+            <img src={{current_user.avatar}}
                  width="50" height="50"
                  alt="PEP8" class="d-inline-block align-top"> {{current_user.name}}
         </a>
@@ -39,7 +39,7 @@
             <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
             <a class="btn btn-success" href="/login">Войти</a>
         </p>
-    {% endif %}
+        {% endif %}
     </nav>
 </header>
 <!-- Begin page content -->

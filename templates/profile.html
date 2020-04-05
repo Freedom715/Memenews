@@ -2,12 +2,12 @@
 
 {% block content %}
 <div class="media">
-    <img src={{form.user.avatar_url}} class="align-self-start mr-3" alt={{form.user.name}}
+    <img src={{form.user.avatar}} class="align-self-start mr-3" alt={{form.user.name}}
          width="200"
          height="200" onclick="">
     <div class="media-body">
         <h1 class="mt-0">{{form.user.name}}</h1>
-        <p>Статус: {{form.user.about}}</p>
+        <p>Статус: {{form.user.status}}</p>
     </div>
 </div>
 <div class="div1">
@@ -15,7 +15,7 @@
     {% if form.error == '' %}
     {% for item in form.friends %}
     <div class="media">
-        <a href="{{item.id}}"> <img src="{{item.avatar_url}}" class="align-self-start mr-3"
+        <a href="{{item.id}}"> <img src="{{item.avatar}}" class="align-self-start mr-3"
                                     alt="PEP8" width="50" height="50" title="{{item.name}}"> </a>
         <div class="media-body">
             <h5 class="mt-0">{{item.name}}</h5>

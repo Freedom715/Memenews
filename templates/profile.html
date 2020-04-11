@@ -1,37 +1,44 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="media">
-    <img src={{form.user.avatar}} class="align-self-start mr-3" alt={{form.user.name}}
-         width="200"
-         height="200" onclick="">
-    <div class="media-body">
-        <h1 class="mt-0">{{form.user.name}}</h1>
-        <p>Статус: {{form.user.status}}</p>
-    </div>
-</div>
-<div class="div1">
-    <h2> Друзья </h2>
-    {% if form.error == '' %}
-    {% for item in form.friends %}
+<div class="col-md-8">
     <div class="media">
-        <a href="{{item.id}}"> <img src="{{item.avatar}}" class="align-self-start mr-3"
-                                    alt="PEP8" width="50" height="50" title="{{item.name}}"> </a>
+        <img src={{form.user.avatar}} class="align-self-start mr-3" alt={{form.user.name}}
+             width="200"
+             height="200" onclick="">
         <div class="media-body">
-            <h5 class="mt-0">{{item.name}}</h5>
+            <h1 class="mt-0">{{form.user.name}}</h1>
+            <p>Статус: {{form.user.status}}</p>
         </div>
     </div>
-    {% endfor %}
-    {% else %}
-    <h4 style="color:red"> {{form.error}} </h4>
-    {% endif %}
+    <div class="div1">
+        <h2> Друзья </h2>
+        {% if form.error == '' %}
+        <ul>
+            {% for item in form.friends %}
+            <li class="list-inline-item">
+                <div class="media">
+                    <a href="{{item.id}}"> <img src="{{item.avatar}}" class="align-self-start mr-3"
+                                                alt="PEP8" width="50" height="50"
+                                                title="{{item.name}}"> </a>
+                    <div class="media-body">
+                        <h5 class="mt-0">{{item.name}}</h5>
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <h4 style="color:red"> {{form.error}} </h4>
+        {% endif %}
+    </div>
+    <div class="div1">
+        {% if form.user.id == form.cur_user.id %}
+        <a href="/logout" class="btn btn-warning">Выход</a>
+        {% else %}
+        <a href="/add_friend/{{form.user.id}}" class="btn btn-warning"> Добавить в друзья </a>
+        {% endif %}
+        <a href="/settings" class="btn btn-secondary">Настройки</a>
+    </div>
+    {% endblock %}
 </div>
-<div class="div1">
-    {% if form.user.id == form.cur_user.id %}
-    <a href="/logout" class="btn btn-warning">Выход</a>
-    {% else %}
-    <a href="/add_friend/{{form.user.id}}" class="btn btn-warning"> Добавить в друзья </a>
-    {% endif %}
-    <a href="/settings" class="btn btn-secondary">Настройки</a>
-</div>
-{% endblock %}

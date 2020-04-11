@@ -84,7 +84,6 @@ class SettingForm(FlaskForm):
 def get_base():
     base = BaseForm()
     if current_user.is_authenticated:
-        print(current_user.theme)
         base.background = current_user.background
         base.text_color = 'white' if not current_user.theme else 'black'
         base.back = '#0a0a0a' if not current_user.theme else '#f5f5f5'
@@ -148,7 +147,7 @@ def get_settings():
             f = avatar
             filename = secure_filename(f.filename)
             f.save("static\\img\\avatars\\" + filename)
-            user.avatar = url_for("static", filename=f"/img/avatars/{filename}")
+            user.avatar = url_for("static", filename=f"img/avatars/{filename}")
         if theme == "0":
             user.theme = False
             print(user.theme)
@@ -164,7 +163,7 @@ def get_settings():
 def get_profile(user_id):
     form = ProfileForm()
     session = db_session.create_session()
-    user = session.query(User).filter(User.id == current_user.id).first()
+    user = session.query(User).filter(User.id == user_id).first()
     form.user = user
     friend = '' if user.friends is None else user.friends
     if len(friend) > 0:
@@ -241,12 +240,20 @@ def edit_news(id):
 @app.route("/people", methods=["GET", "POST"])
 def get_people():
     form = UsersForm()
-    if form.validate_on_submit():
-        print(form.find_string.data)
-        redirect('/profile')
     session = db_session.create_session()
     users = session.query(User)
+    if form.validate_on_submit():
+        if form.find_string.data:
+            users = session.query(User).filter(User.name.like(f'%{form.find_string.data}%'))
+        else:
+            users = session.query(User)
     return render_template("people.html", form=form, users=users, title='Люди', base=get_base())
+
+
+@app.route('/construct')
+@login_required
+def constructor():
+    return render_template("memes.html", title='Коструктор', base=get_base())
 
 
 @app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
@@ -274,7 +281,7 @@ def login():
             return redirect("/")
         return render_template('login.html',
                                message="Неправильный логин или пароль",
-                               form=form)
+                               form=form, base=get_base())
     return render_template('login.html', title='Авторизация', form=form, base=get_base())
 
 

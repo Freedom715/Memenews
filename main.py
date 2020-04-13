@@ -1,12 +1,10 @@
 import datetime
-import os
 
 from flask import Flask, render_template, redirect, request, make_response, session, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import Api
 # from sqlalchemy import or_
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileRequired, FileField
 from werkzeug.exceptions import abort
 from werkzeug.utils import secure_filename
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, FileField
@@ -67,7 +65,7 @@ class ProfileForm(FlaskForm):
 
 
 class UsersForm(FlaskForm):
-    find_string = StringField('Поиск', validators=[DataRequired()])
+    find_string = StringField('Поиск людей')
     submit = SubmitField('Найти')
 
 
@@ -198,16 +196,6 @@ def add_news():
                            form=form, base=get_base())
 
 
-@app.route('/people/find/<userfind>', methods=['GET', 'POST'])
-def user_find(userfind):
-    form = UsersForm()
-    if request.method == 'GET':
-        session = db_session.create_session()
-        print('Ok')
-    if form.validate_on_submit():
-        print('send')
-
-
 @app.route('/news/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_news(id):
@@ -234,20 +222,24 @@ def edit_news(id):
             return redirect('/')
         else:
             abort(404)
-    return render_template('add_post.html', title='Редактирование новости', form=form, base=get_base())
+    return render_template('add_post.html', title='Редактирование новости', form=form,
+                           base=get_base())
 
 
 @app.route("/people", methods=["GET", "POST"])
 def get_people():
     form = UsersForm()
+    js = url_for("static", filename="js/bs-custom-file-input.js")
     session = db_session.create_session()
     users = session.query(User)
+    find_string = request.form.get("find_string")
     if form.validate_on_submit():
         if form.find_string.data:
-            users = session.query(User).filter(User.name.like(f'%{form.find_string.data}%'))
+            users = session.query(User).filter(User.name.like(f'%{find_string}%'))
         else:
             users = session.query(User)
-    return render_template("people.html", form=form, users=users, title='Люди', base=get_base())
+    return render_template("people.html", form=form, users=users, title='Люди', base=get_base(),
+                           js=js)
 
 
 @app.route('/construct')

@@ -13,9 +13,11 @@ from wtforms.validators import DataRequired
 
 import news_resources
 from data import db_session
+from data.albums import Album
 from data.news import News
 from data.users import User
 from functions import check_password
+from random import choice
 
 app = Flask(__name__)
 api = Api(app)
@@ -105,7 +107,6 @@ def add_friend(user_id):
             user.friends = "'" + user.friends.strip("'") + ', ' + str(user_id) + "'"
         else:
             user.friends = user.friends[:-1] + ', ' + str(user_id) + "'"
-        print(user.friends)
         session.commit()
     return redirect(f'/profile/{user_id}')
 
@@ -162,6 +163,8 @@ def get_profile(user_id):
     form = ProfileForm()
     session = db_session.create_session()
     user = session.query(User).filter(User.id == user_id).first()
+    albums = session.query(Album).filter(Album.id.in_(user.albums.strip("'").split(', ')))
+    form.albums = albums
     form.user = user
     friend = '' if user.friends is None else user.friends
     if len(friend) > 0:
@@ -170,7 +173,8 @@ def get_profile(user_id):
     else:
         form.friends = []
         form.error = 'Этот пользователь пока одинок. Напиши ему, может подружитесь.'
-    return render_template('profile.html', title='Профиль', form=form, base=get_base())
+    return render_template('profile.html', title='Профиль', form=form, albums=albums,
+                           base=get_base())
 
 
 @app.route('/profile')
@@ -299,10 +303,16 @@ def reqister():
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Такой пользователь уже есть")
+        album = Album(
+            name=form.name.data + 'album',
+            cover='/static/img/photos/{}.png'.format(choice(['ololo', 'trollface', 'i_dont_now', 'aaaaa']))
+        )
+        session.add(album)
         user = User(
             name=form.name.data,
             email=form.email.data,
-            status=form.status.data
+            status=form.status.data,
+            albums=album.name
         )
         user.set_password(form.password.data)
         session.add(user)

@@ -15,9 +15,11 @@ from wtforms.validators import DataRequired
 
 import news_resources
 from data import db_session
+from data.albums import Album
 from data.news import News
 from data.users import User
 from functions import check_password
+from random import choice
 
 app = Flask(__name__)
 api = Api(app)
@@ -69,7 +71,7 @@ class ProfileForm(FlaskForm):
 
 
 class UsersForm(FlaskForm):
-    find_string = StringField('Поиск', validators=[DataRequired()])
+    find_string = StringField('Поиск людей')
     submit = SubmitField('Найти')
 
 
@@ -111,7 +113,6 @@ def add_friend(user_id):
             user.friends = "'" + user.friends.strip("'") + ', ' + str(user_id) + "'"
         else:
             user.friends = user.friends[:-1] + ', ' + str(user_id) + "'"
-        print(user.friends)
         session.commit()
     return redirect(f'/profile/{user_id}')
 
@@ -167,7 +168,9 @@ def get_settings():
 def get_profile(user_id):
     form = ProfileForm()
     session = db_session.create_session()
-    user = session.query(User).filter(User.id == current_user.id).first()
+    user = session.query(User).filter(User.id == user_id).first()
+    albums = session.query(Album).filter(Album.id.in_(user.albums.strip("'").split(', ')))
+    form.albums = albums
     form.user = user
     friend = '' if user.friends is None else user.friends
     if len(friend) > 0:
@@ -176,7 +179,8 @@ def get_profile(user_id):
     else:
         form.friends = []
         form.error = 'Этот пользователь пока одинок. Напиши ему, может подружитесь.'
-    return render_template('profile.html', title='Профиль', form=form, base=get_base())
+    return render_template('profile.html', title='Профиль', form=form, albums=albums,
+                           base=get_base())
 
 
 @app.route('/profile')
@@ -209,21 +213,8 @@ def add_news():
         session.merge(current_user)
         session.commit()
         return redirect('/')
-
-# @app.route('/news', methods=['GET', 'POST'])
-# @login_required
-# def add_picture_to_news():
-#
-
-
-@app.route('/people/find/<userfind>', methods=['GET', 'POST'])
-def user_find(userfind):
-    form = UsersForm()
-    if request.method == 'GET':
-        session = db_session.create_session()
-        print('Ok')
-    if form.validate_on_submit():
-        print('send')
+    return render_template('add_post.html', title='Добавление новости',
+                           form=form, base=get_base())
 
 
 @app.route('/news/<int:id>', methods=['GET', 'POST'])
@@ -259,13 +250,23 @@ def edit_news(id):
 @app.route("/people", methods=["GET", "POST"])
 def get_people():
     form = UsersForm()
-    if form.validate_on_submit():
-        print(form.find_string.data)
-        redirect('/profile')
+    js = url_for("static", filename="js/bs-custom-file-input.js")
     session = db_session.create_session()
     users = session.query(User)
-    return render_template("people.html", form=form, users=users,
-                           title='Люди', base=get_base())
+    find_string = request.form.get("find_string")
+    if form.validate_on_submit():
+        if form.find_string.data:
+            users = session.query(User).filter(User.name.like(f'%{find_string}%'))
+        else:
+            users = session.query(User)
+    return render_template("people.html", form=form, users=users, title='Люди', base=get_base(),
+                           js=js)
+
+
+@app.route('/construct')
+@login_required
+def constructor():
+    return render_template("memes.html", title='Коструктор', base=get_base())
 
 
 @app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
@@ -319,10 +320,16 @@ def reqister():
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Такой пользователь уже есть")
+        album = Album(
+            name=form.name.data + 'album',
+            cover='/static/img/photos/{}.png'.format(choice(['ololo', 'trollface', 'i_dont_now', 'aaaaa']))
+        )
+        session.add(album)
         user = User(
             name=form.name.data,
             email=form.email.data,
-            status=form.status.data
+            status=form.status.data,
+            albums=album.name
         )
         user.set_password(form.password.data)
         session.add(user)

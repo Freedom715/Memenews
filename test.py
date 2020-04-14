@@ -1,255 +1,83 @@
-from flask import request
 from requests import get
 from flask import Flask
 
 app = Flask(__name__)
 
-compact
-type
-click
-focus
-blur
-title
-lang
-dir
-innerText
-hidden
-accessKey
-accessKeyLabel
-draggable
-contentEditable
-isContentEditable
-contextMenu
-spellcheck
-nonce
-offsetParent
-offsetTop
-offsetLeft
-offsetWidth
-offsetHeight
-oncopy
-oncut
-onpaste
-style
-onabort
-onblur
-onfocus
-onauxclick
-oncanplay
-oncanplaythrough
-onchange
-onclick
-onclose
-oncontextmenu
-oncuechange
-ondblclick
-ondrag
-ondragend
-ondragenter
-ondragexit
-ondragleave
-ondragover
-ondragstart
-ondrop
-ondurationchange
-onemptied
-onended
-onformdata
-oninput
-oninvalid
-onkeydown
-onkeypress
-onkeyup
-onload
-onloadeddata
-onloadedmetadata
-onloadend
-onloadstart
-onmousedown
-onmouseenter
-onmouseleave
-onmousemove
-onmouseout
-onmouseover
-onmouseup
-onwheel
-onpause
-onplay
-onplaying
-onprogress
-onratechange
-onreset
-onresize
-onscroll
-onseeked
-onseeking
-onselect
-onshow
-onstalled
-onsubmit
-onsuspend
-ontimeupdate
-onvolumechange
-onwaiting
-onselectstart
-ontoggle
-onpointercancel
-onpointerdown
-onpointerup
-onpointermove
-onpointerout
-onpointerover
-onpointerenter
-onpointerleave
-ongotpointercapture
-onlostpointercapture
-onmozfullscreenchange
-onmozfullscreenerror
-onanimationcancel
-onanimationend
-onanimationiteration
-onanimationstart
-ontransitioncancel
-ontransitionend
-ontransitionrun
-ontransitionstart
-onwebkitanimationend
-onwebkitanimationiteration
-onwebkitanimationstart
-onwebkittransitionend
-dataset
-tabIndex
-onerror
-getAttributeNames
-getAttribute
-getAttributeNS
-toggleAttribute
-setAttribute
-setAttributeNS
-removeAttribute
-removeAttributeNS
-hasAttribute
-hasAttributeNS
-hasAttributes
-closest
-matches
-webkitMatchesSelector
-getElementsByTagName
-getElementsByTagNameNS
-getElementsByClassName
-insertAdjacentElement
-insertAdjacentText
-mozMatchesSelector
-setPointerCapture
-releasePointerCapture
-hasPointerCapture
-setCapture
-releaseCapture
-getAttributeNode
-setAttributeNode
-removeAttributeNode
-getAttributeNodeNS
-setAttributeNodeNS
-getClientRects
-getBoundingClientRect
-scrollIntoView
-scroll
-scrollTo
-scrollBy
-insertAdjacentHTML
-querySelector
-querySelectorAll
-attachShadow
-requestFullscreen
-mozRequestFullScreen
-requestPointerLock
-animate
-getAnimations
-before
-after
-replaceWith
-remove
-prepend
-append
-namespaceURI
-prefix
-localName
-tagName
-id
-className
-classList
-part
-attributes
-scrollTop
-scrollLeft
-scrollWidth
-scrollHeight
-clientTop
-clientLeft
-clientWidth
-clientHeight
-scrollTopMax
-scrollLeftMax
-innerHTML
-outerHTML
-shadowRoot
-assignedSlot
-slot
-onfullscreenchange
-onfullscreenerror
-previousElementSibling
-nextElementSibling
-children
-firstElementChild
-lastElementChild
-childElementCount
-getRootNode
-hasChildNodes
-insertBefore
-appendChild
-replaceChild
-removeChild
-normalize
-cloneNode
-isSameNode
-isEqualNode
-compareDocumentPosition
-contains
-lookupPrefix
-lookupNamespaceURI
-isDefaultNamespace
-nodeType
-nodeName
-baseURI
-isConnected
-ownerDocument
-parentNode
-parentElement
-childNodes
-firstChild
-lastChild
-previousSibling
-nextSibling
-nodeValue
-textContent
-ELEMENT_NODE
-ATTRIBUTE_NODE
-TEXT_NODE
-CDATA_SECTION_NODE
-ENTITY_REFERENCE_NODE
-ENTITY_NODE
-PROCESSING_INSTRUCTION_NODE
-COMMENT_NODE
-DOCUMENT_NODE
-DOCUMENT_TYPE_NODE
-DOCUMENT_FRAGMENT_NODE
-NOTATION_NODE
-DOCUMENT_POSITION_DISCONNECTED
-DOCUMENT_POSITION_PRECEDING
-DOCUMENT_POSITION_FOLLOWING
-DOCUMENT_POSITION_CONTAINS
-DOCUMENT_POSITION_CONTAINED_BY
-DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
-addEventListener
-removeEventListener
-dispatchEvent
+
+
+
+@app.route('/', methods=['POST', 'GET'])
+def form_sample():
+    if request.method == 'GET':
+        return f'''<!doctype html>
+                        <html lang="en">
+                          <head>
+                            <meta charset="utf-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+                            <link rel="stylesheet"
+                            href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+                            integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+                            crossorigin="anonymous">
+                            <title>Пример формы</title>
+                          </head>
+                          <body>
+                            <h1>Форма для регистрации в суперсекретной системе</h1>
+                            <div>
+                                <form class="login_form" method="post">
+                                    <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Введите адрес почты" name="email">
+                                    <input type="password" class="form-control" id="password" placeholder="Введите пароль" name="password">
+                                    <div class="form-group">
+                                        <label for="classSelect">В каком вы классе</label>
+                                        <select class="form-control" id="classSelect" name="class">
+                                          <option>7</option>
+                                          <option>8</option>
+                                          <option>9</option>
+                                          <option>10</option>
+                                          <option>11</option>
+                                        </select>
+                                     </div>
+                                    <div class="form-group">
+                                        <label for="about">Немного о себе</label>
+                                        <textarea class="form-control" id="about" rows="3" name="about"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="photo">Приложите фотографию</label>
+                                        <input type="file" class="form-control-file" id="photo" name="file">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="form-check">Укажите пол</label>
+                                        <div class="form-check">
+                                          <input class="form-check-input" type="radio" name="sex" id="male" value="male" checked>
+                                          <label class="form-check-label" for="male">
+                                            Мужской
+                                          </label>
+                                        </div>
+                                        <div class="form-check">
+                                          <input class="form-check-input" type="radio" name="sex" id="female" value="female">
+                                          <label class="form-check-label" for="female">
+                                            Женский
+                                          </label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-check">
+                                        <input type="checkbox" class="form-check-input" id="acceptRules" name="accept">
+                                        <label class="form-check-label" for="acceptRules">Готов быть добровольцем</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Записаться</button>
+                                </form>
+                            </div>
+                          </body>
+                        </html>'''
+    elif request.method == 'POST':
+        print(request.form['email'])
+        print(request.form['password'])
+        print(request.form['class'])
+        print(request.form['file'])
+        print(request.form['about'])
+        print(request.form['accept'])
+        print(request.form['sex'])
+        return "Форма отправлена"
+
+
+if __name__ == '__main__':
+    app.run(port=8080, host='127.0.0.1')

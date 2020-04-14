@@ -1,5 +1,78 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Параметры {{form.name}}</h1>
+
+<h1>Параметры</h1>
+<label></label>
+<form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroupFileAddon01">Аватар</span>
+            </div>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="inputGroupFile01"
+                       aria-describedby="inputGroupFileAddon01" name="avatar">
+                <label class="custom-file-label" for="inputGroupFile01" data-browse="Обзор">{{user.avatar}}</label>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="label2">Имя пользователя</span>
+            </div>
+            <input type="text" class="form-control" placeholder={{user.name}} aria-label="Username"
+                   aria-describedby="basic-addon1" name="username">
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="label3">Статус</span>
+            </div>
+            <input type="text" class="form-control" placeholder={{user.status}} aria-label="Username"
+                   aria-describedby="basic-addon1" name="status">
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="label4">Фон</span>
+            </div>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="inputGroupFile03" name="background">
+                <label class="custom-file-label" for="inputGroupFile03" data-browse="Обзор"
+                       aria-describedby="inputGroupFileAddon02">{{user.background}}</label>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <label class="input-group-text" for="inputGroupSelect01">Тема</label>
+            </div>
+            <select class="custom-select" id="inputGroupSelect01" name="theme">
+                <option selected>Тема</option>
+                <option value="0">Светлая</option>
+                <option value="1">Темная</option>
+            </select>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary btn-lg btn-block">Применить</button>
+
+
+</form>
+
+<script>
+      bsCustomFileInput.init()
+
+      var btn = document.getElementById('btnResetForm')
+      var form = document.querySelector('form')
+      btn.addEventListener('click', function () {
+        form.reset()
+      })
+
+
+</script>
 {% endblock %}

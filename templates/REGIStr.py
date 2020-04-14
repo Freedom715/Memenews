@@ -39,7 +39,7 @@ def return_sample_page(name_name, sur_name, email, learn, ):
                     href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" 
                     integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" 
                     crossorigin="anonymous">
-                    <link rel="stylesheet" type="text/css" href="{url_for('static',
+                    <link rel="stylesheet" type="text/css" href="{url_for('data',
                                                                           filename='css/style.css')}" />
                     <title>Варианты выбора</title>
                   </head>
@@ -72,7 +72,7 @@ def form_sample():
                             <h1>Форма для регистрации в суперсекретной системе</h1>
                             <div>
                                 <form class="login_form" method="post">
-                                    <link rel="stylesheet" type="text/css" href="{url_for('static',
+                                    <link rel="stylesheet" type="text/css" href="{url_for('data',
                                                                                           filename='css/style.css')}" />
                                     <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Введите адрес почты" name="email">
                                     <div class="form-group">

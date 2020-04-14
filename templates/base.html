@@ -7,16 +7,31 @@
           href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
           crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+            integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+            crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+            integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+            crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+            crossorigin="anonymous">
+    </script>
+    <script src={{base.js_for_files}}></script>
     <title>{{title}}</title>
     <style>
+    .people {background-color: {{ base.back_color }}}
    BODY {
     font-family: Arial, Helvetica, sans-serif; /* Гарнитура шрифта */
-    color: white;
-    background-image: url(https://avatars.mds.yandex.net/get-pdb/1947635/6706b408-eb97-49ce-9133-cf95447c9301/s1200); /* Путь к фоновому изображению */
+    color: {{ base.text_color }};
+    background-image: url({{ base.background }});8ij /* Путь к фоновому изображению */
+    background-color: {{ base.back_color }}
    }
    .div1 {
-    margin: 1.9em 0em 0em;
+    margin: 2.0em 0em 0em;
     }
+
     </style>
 </head>
 <body>
@@ -28,7 +43,7 @@
         {% if current_user.is_authenticated %}
         <a class="navbar-brand" href="/people">Люди</a>
         <a class="navbar-brand" href="/profile/{{current_user.id}}">
-            <img src={{current_user.avatar_url}}
+            <img src={{current_user.avatar}}
                  width="50" height="50"
                  alt="PEP8" class="d-inline-block align-top"> {{current_user.name}}
         </a>
@@ -37,11 +52,12 @@
             <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
             <a class="btn btn-success" href="/login">Войти</a>
         </p>
-    {% endif %}
+        {% endif %}
     </nav>
 </header>
 <!-- Begin page content -->
 <main role="main" class="container">
+
     {% block content %}{% endblock %}
 </main>
 </body>

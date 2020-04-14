@@ -5,6 +5,7 @@
 <div class="btn-toolbar justify-content-between" role="toolbar"
      aria-label="Toolbar with button groups">
     <form action="" method="post">
+        {{ form.hidden_tag() }}
         <div class="input-group">
             {{ form.find_string(class="form-control") }}
             {{ form.submit(type="submit", class="btn btn-secondary") }}
@@ -18,9 +19,9 @@
 </div>
 {% for item in users%}
 <div class="col-md6 border rounded">
-    <div>
+    <div class="people">
         <div class="media">
-            <img src={{item.avatar_url}} class="align-self-start mr-3" alt={{item.name}} width="125"
+            <img src={{item.avatar}} class="align-self-start mr-3" alt={{item.name}} width="125"
                  height="125">
             <div class="media-body">
                 <h3 class="mt-0"><a href="/profile/{{ item.id }}"> {{item.name}} </a></h3>

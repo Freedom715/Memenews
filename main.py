@@ -1,12 +1,15 @@
 import datetime
+import os
 
-from flask import Flask, render_template, redirect, request, make_response, session
+from flask import Flask, render_template, redirect, request, make_response, session, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import Api
 # from sqlalchemy import or_
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileRequired, FileField
 from werkzeug.exceptions import abort
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField
+from werkzeug.utils import secure_filename
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, FileField
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 
@@ -14,7 +17,7 @@ import news_resources
 from data import db_session
 from data.news import News
 from data.users import User
-from help_functions import check_password
+from functions import check_password
 
 app = Flask(__name__)
 api = Api(app)
@@ -24,12 +27,21 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
+class BaseForm(FlaskForm):
+    background = ""
+    text_color = 'white'
+    back = '#0a0a0a'
+    back_color = 'black'
+    font_white = "white"
+    js_for_files = ""
+
+
 class RegisterForm(FlaskForm):
     email = EmailField('Почта', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
     password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
     name = StringField('Имя пользователя', validators=[DataRequired()])
-    about = TextAreaField("Немного о себе")
+    status = TextAreaField("Немного о себе")
     submit = SubmitField('Войти')
 
 
@@ -45,6 +57,7 @@ class NewsForm(FlaskForm):
     content = TextAreaField("Содержание")
     is_private = BooleanField("Личное")
     submit = SubmitField('Применить')
+    images = ["aaa"]
 
 
 class ProfileForm(FlaskForm):
@@ -58,6 +71,33 @@ class ProfileForm(FlaskForm):
 class UsersForm(FlaskForm):
     find_string = StringField('Поиск', validators=[DataRequired()])
     submit = SubmitField('Найти')
+
+
+class SettingForm(FlaskForm):
+    avatar = FileField(label="Аватар")
+    name = StringField('Смена ника')
+    status = StringField('Смена статуса')
+    use_background = BooleanField("Использовать фон", default=False)
+    background = FileField(label="Фон")
+    theme = BooleanField("Тёмная\светлая тема")
+    submit = SubmitField('Применить')
+
+
+def get_base():
+    base = BaseForm()
+    if current_user.is_authenticated:
+        print(current_user.theme)
+        base.background = current_user.background
+        base.text_color = 'white' if not current_user.theme else 'black'
+        base.back = '#0a0a0a' if not current_user.theme else '#f5f5f5'
+        base.back_color = 'black' if not current_user.theme else 'white'
+    else:
+        base.background = ""
+        base.text_color = 'black'
+        base.back = '#0a0a0a'
+        base.back_color = 'white'
+    base.js_for_files = url_for("static", filename="/js/bs-custom-file-input.js")
+    return base
 
 
 @app.route('/add_friend/<int:user_id>', methods=['GET', 'POST'])
@@ -82,17 +122,52 @@ def load_user(user_id):
     return session.query(User).get(user_id)
 
 
-@app.route('/settings')  # TODO
-def get_params():
-    form = NewsForm()
-    return render_template('settings.html', title='Параметры', form=form)
+@app.route('/settings', methods=["GET", "POST"])
+def get_settings():
+    form1 = SettingForm()
+    session = db_session.create_session()
+    user = session.query(User).filter(User.id == current_user.id).first()
+
+    if request.method == "GET":
+        return render_template('settings.html', title='Параметры', form=form1, base=get_base(),
+                               user=user)
+    elif request.method == "POST":
+        avatar = request.files.get("avatar")
+        username = request.form.get("username")
+        status = request.form.get("status")
+        background = request.files.get("background")
+        theme = request.form.get("theme")
+        if username:
+            user.name = username
+        if status:
+            user.status = status
+        if background:
+            f = background
+            filename = secure_filename(f.filename)
+            print(filename)
+            f.save("static\\img\\backgrounds\\" + filename)
+            user.background = url_for("static", filename=f"img/backgrounds/{filename}")
+        if avatar:
+            f = avatar
+            filename = secure_filename(f.filename)
+            f.save("static\\img\\avatars\\" + filename)
+            user.avatar = url_for("static", filename=f"img/avatars/{filename}")
+        if theme == "0":
+            user.theme = False
+            print(user.theme)
+        elif theme == "1":
+            user.theme = True
+            print(user.theme)
+
+        session.commit()
+        return redirect(f'/profile/{current_user.id}')
 
 
 @app.route('/profile/<user_id>')
 def get_profile(user_id):
     form = ProfileForm()
     session = db_session.create_session()
-    user = session.query(User).filter(User.id == user_id)[0]
+    user = session.query(User).filter(User.id == current_user.id).first()
     form.user = user
     friend = '' if user.friends is None else user.friends
     if len(friend) > 0:
@@ -101,7 +176,7 @@ def get_profile(user_id):
     else:
         form.friends = []
         form.error = 'Этот пользователь пока одинок. Напиши ему, может подружитесь.'
-    return render_template('profile.html', title='Профиль', form=form)
+    return render_template('profile.html', title='Профиль', form=form, base=get_base())
 
 
 @app.route('/profile')
@@ -113,18 +188,32 @@ def return_profile():
 @login_required
 def add_news():
     form = NewsForm()
-    if form.validate_on_submit():
+    if request.method == "GET":
+        return render_template('add_post.html', title='Добавление новости',
+                               form=form, base=get_base())
+    elif request.method == "POST":
         session = db_session.create_session()
         news = News()
-        news.title = form.title.data
-        news.content = form.content.data
-        news.is_private = form.is_private.data
+        news.title = request.form.get("title")
+        news.content = request.form.get("content")
+        news.is_private = request.form.get("private")
+        f = request.files.get("images")
+        if f:
+            print(f)
+            filename = secure_filename(f.filename)
+            print(filename)
+            f.save("static\\img\\images\\" + filename)
+            news.image = url_for("static", filename=f"img/images/{filename}")
+
         current_user.news.append(news)
         session.merge(current_user)
         session.commit()
         return redirect('/')
-    return render_template('news.html', title='Добавление новости',
-                           form=form)
+
+# @app.route('/news', methods=['GET', 'POST'])
+# @login_required
+# def add_picture_to_news():
+#
 
 
 @app.route('/people/find/<userfind>', methods=['GET', 'POST'])
@@ -163,7 +252,8 @@ def edit_news(id):
             return redirect('/')
         else:
             abort(404)
-    return render_template('news.html', title='Редактирование новости', form=form)
+    return render_template('add_post.html', title='Редактирование новости', form=form,
+                           base=get_base())
 
 
 @app.route("/people", methods=["GET", "POST"])
@@ -174,7 +264,8 @@ def get_people():
         redirect('/profile')
     session = db_session.create_session()
     users = session.query(User)
-    return render_template("people.html", form=form, users=users, title='Люди')
+    return render_template("people.html", form=form, users=users,
+                           title='Люди', base=get_base())
 
 
 @app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
@@ -202,8 +293,8 @@ def login():
             return redirect("/")
         return render_template('login.html',
                                message="Неправильный логин или пароль",
-                               form=form)
-    return render_template('login.html', title='Авторизация', form=form)
+                               form=form, base=get_base())
+    return render_template('login.html', title='Авторизация', form=form, base=get_base())
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -231,13 +322,13 @@ def reqister():
         user = User(
             name=form.name.data,
             email=form.email.data,
-            about=form.about.data
+            status=form.status.data
         )
         user.set_password(form.password.data)
         session.add(user)
         session.commit()
         return redirect('/login')
-    return render_template('register.html', title='Регистрация', form=form)
+    return render_template('register.html', title='Регистрация', form=form, base=get_base())
 
 
 @app.route('/logout')
@@ -255,7 +346,7 @@ def index():
             (News.user == current_user) | (News.is_private != True))
     else:
         news = session.query(News).filter(News.is_private != True)
-    return render_template("index.html", news=news, title='Лента')
+    return render_template("index.html", news=news, title='Лента', base=get_base())
 
 
 @app.route("/cookie_test")

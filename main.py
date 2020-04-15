@@ -1,15 +1,14 @@
 import datetime
-import os
+from random import choice
 
 from flask import Flask, render_template, redirect, request, make_response, session, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import Api
 # from sqlalchemy import or_
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileRequired, FileField
 from werkzeug.exceptions import abort
 from werkzeug.utils import secure_filename
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, FileField
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, BooleanField
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 
@@ -19,7 +18,6 @@ from data.albums import Album
 from data.news import News
 from data.users import User
 from functions import check_password
-from random import choice
 
 app = Flask(__name__)
 api = Api(app)
@@ -55,10 +53,10 @@ class LoginForm(FlaskForm):
 
 
 class NewsForm(FlaskForm):
-    title = StringField('Заголовок', validators=[DataRequired()])
-    content = TextAreaField("Содержание")
-    is_private = BooleanField("Личное")
-    submit = SubmitField('Применить')
+    title = 'Заголовок'
+    content = "Содержание"
+    is_private = "Личное"
+    submit = 'Применить'
     images = ["aaa"]
 
 
@@ -75,20 +73,9 @@ class UsersForm(FlaskForm):
     submit = SubmitField('Найти')
 
 
-class SettingForm(FlaskForm):
-    avatar = FileField(label="Аватар")
-    name = StringField('Смена ника')
-    status = StringField('Смена статуса')
-    use_background = BooleanField("Использовать фон", default=False)
-    background = FileField(label="Фон")
-    theme = BooleanField("Тёмная\светлая тема")
-    submit = SubmitField('Применить')
-
-
 def get_base():
     base = BaseForm()
     if current_user.is_authenticated:
-        print(current_user.theme)
         base.background = current_user.background
         base.text_color = 'white' if not current_user.theme else 'black'
         base.back = '#0a0a0a' if not current_user.theme else '#f5f5f5'
@@ -98,8 +85,40 @@ def get_base():
         base.text_color = 'black'
         base.back = '#0a0a0a'
         base.back_color = 'white'
-    base.js_for_files = url_for("static", filename="/js/bs-custom-file-input.js")
+    base.js_for_files = url_for("static", filename="js/bs-custom-file-input.js")
     return base
+
+
+@app.route('/add_album', methods=['GET', 'POST'])
+@login_required
+def add_album():
+    form = NewsForm()
+    if request.method == "GET":
+        return render_template('add_album.html', title='Добавление альбома', form=form, base=get_base())
+    elif request.method == "POST":
+        if form.validate_on_submit():
+            session = db_session.create_session()
+            album = Album()
+            album.name = request.form.get("title")
+            album.content = request.form.get("content")
+            album.is_private = request.form.get("private")
+            f = request.files.get("images")
+            if f:
+                print(f)
+                filename = secure_filename(f.filename)
+                print(filename)
+                f.save("static\\img\\photos\\" + filename)
+                album.cover = url_for("static", filename=f"img/images/{filename}")
+            else:
+                album.cover = '/static/img/photos/sample_covers/{}.png'.format(
+                    choice(['ololo', 'trollface', 'i_dont_now', 'aaaaa']))
+            session.add(album)
+            user = session.query(User).filter(User.id == current_user.id).first()
+            print(user.albums, album.id)
+            user.albums = user.albums.rstrip("'") + ', ' + str(album.id) + "'"
+            session.commit()
+            return redirect('/')
+    return render_template('add_album.html', title='Добавление альбома', form=form, base=get_base())
 
 
 @app.route('/add_friend/<int:user_id>', methods=['GET', 'POST'])
@@ -124,13 +143,12 @@ def load_user(user_id):
 
 
 @app.route('/settings', methods=["GET", "POST"])
-def get_settings():
-    form1 = SettingForm()
+def settings():
     session = db_session.create_session()
     user = session.query(User).filter(User.id == current_user.id).first()
 
     if request.method == "GET":
-        return render_template('settings.html', title='Параметры', form=form1, base=get_base(),
+        return render_template('settings.html', title='Параметры', base=get_base(),
                                user=user)
     elif request.method == "POST":
         avatar = request.files.get("avatar")
@@ -208,7 +226,6 @@ def add_news():
             print(filename)
             f.save("static\\img\\images\\" + filename)
             news.image = url_for("static", filename=f"img/images/{filename}")
-
         current_user.news.append(news)
         session.merge(current_user)
         session.commit()
@@ -322,7 +339,8 @@ def reqister():
                                    message="Такой пользователь уже есть")
         album = Album(
             name=form.name.data + 'album',
-            cover='/static/img/photos/{}.png'.format(choice(['ololo', 'trollface', 'i_dont_now', 'aaaaa']))
+            cover='/static/img/photos/sample_covers/{}.png'.format(
+                choice(['ololo', 'trollface', 'i_dont_now', 'aaaaa']))
         )
         session.add(album)
         user = User(

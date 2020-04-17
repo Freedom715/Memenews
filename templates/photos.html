@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col col-xl-4">
+        <h3> Обложка альбома </h3>
+        <img src="{{album.cover}}" width="150" height="150">
+        {% for item in photos %}
+        {% endfor %}
+    </div>
+    <div class=""></div>
+</div>
+{% endblock %}

@@ -94,7 +94,8 @@ def get_base():
 def add_album():
     form = NewsForm()
     if request.method == "GET":
-        return render_template('add_album.html', title='Добавление альбома', form=form, base=get_base())
+        return render_template('add_album.html', title='Добавление альбома', form=form,
+                               base=get_base())
     elif request.method == "POST":
         if form.validate_on_submit():
             session = db_session.create_session()
@@ -104,21 +105,33 @@ def add_album():
             album.is_private = request.form.get("private")
             f = request.files.get("images")
             if f:
-                print(f)
                 filename = secure_filename(f.filename)
-                print(filename)
-                f.save("static\\img\\photos\\" + filename)
-                album.cover = url_for("static", filename=f"img/images/{filename}")
+                f.save("static\\img\\photos\\covers\\" + filename)
+                album.cover = url_for("static", filename=f"img/photos/covers/{filename}")
+                album.photos = url_for("static", filename=f"img/photos/covers/{filename}")
             else:
                 album.cover = '/static/img/photos/sample_covers/{}.png'.format(
                     choice(['ololo', 'trollface', 'i_dont_now', 'aaaaa']))
+                album.photos = ''
             session.add(album)
             user = session.query(User).filter(User.id == current_user.id).first()
-            print(user.albums, album.id)
             user.albums = user.albums.rstrip("'") + ', ' + str(album.id) + "'"
             session.commit()
             return redirect('/')
     return render_template('add_album.html', title='Добавление альбома', form=form, base=get_base())
+
+
+@app.route('/messages/<user_id>')
+def messages(user_id):
+    return render_template('messages.html', base=get_base())
+
+
+@app.route('/album/<album_id>')
+def album(album_id):
+    session = db_session.create_session()
+    album = session.query(Album).filter(Album.id == album_id).first()
+    photos = album.photos.split(', ')
+    return render_template('photos.html', base=get_base(), photos=photos, album=album)
 
 
 @app.route('/add_friend/<int:user_id>', methods=['GET', 'POST'])
@@ -338,7 +351,7 @@ def reqister():
                                    form=form,
                                    message="Такой пользователь уже есть")
         album = Album(
-            name=form.name.data + 'album',
+            name=form.name.data + ' album',
             cover='/static/img/photos/sample_covers/{}.png'.format(
                 choice(['ololo', 'trollface', 'i_dont_now', 'aaaaa']))
         )

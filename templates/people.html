@@ -28,6 +28,7 @@
                 <h3 class="mt-0"><a href="/profile/{{ item.id }}"> {{item.name}} </a></h3>
                 <h5 class="mt-1">Статус: {{item.status}}</h5>
                 {% if current_user.is_authenticated %}
+                <a href="/messages/{{ item.id }}" class="btn btn-warning">Сообщение</a>
                 <a href="/add_friend/{{ item.id }}" class="btn btn-warning">Добавить в друзья</a>
                 {% endif %}
             </div>

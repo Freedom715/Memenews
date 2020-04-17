@@ -41,7 +41,9 @@
             {% for item in form.albums %}
             <li class="list-inline-item">
                 <h3>{{item.name}}</h3>
-                <img src="{{item.cover}}" alt="{{item.cover}}" width="150" height="150">
+                <a href="/album/{{item.id}}">
+                    <img src="{{item.cover}}" alt="{{item.cover}}" width="150" height="150">
+                </a>
             </li>
             {% endfor %}
         </ul>

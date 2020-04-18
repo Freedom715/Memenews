@@ -8,7 +8,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from .db_session import SqlAlchemyBase
 
-
 class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     __tablename__ = 'users'
 
@@ -23,19 +22,23 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
                                      default=datetime.datetime.now)
     friends = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     avatar = sqlalchemy.Column(sqlalchemy.String,
-                                   default='/static/img/backgrounds/default.png')
+                               default='/static/img/backgrounds/default.png')
     liked_news = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=True)
     liked_photos = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=True)
     background = sqlalchemy.Column(sqlalchemy.String, default='/static/img/backgrounds/default.png')
     theme = sqlalchemy.Column(sqlalchemy.Boolean, default=1)
     albums = sqlalchemy.Column(sqlalchemy.VARCHAR)
-    news = orm.relation("News", back_populates='user')
+    news = orm.relation("News", back_populates='user_id')
+    messages = orm.relation("Message", back_populates='user_from_id')
 
-    def __repr__(self):
-        return f"<User> {self.id} {self.name} {self.email}"
 
-    def set_password(self, password):
-        self.hashed_password = generate_password_hash(password)
+def __repr__(self):
+    return f"<User> {self.id} {self.name} {self.email}"
 
-    def check_password(self, password):
-        return check_password_hash(self.hashed_password, password)
+
+def set_password(self, password):
+    self.hashed_password = generate_password_hash(password)
+
+
+def check_password(self, password):
+    return check_password_hash(self.hashed_password, password)

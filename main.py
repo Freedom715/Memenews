@@ -15,6 +15,7 @@ from wtforms.validators import DataRequired
 import news_resources
 from data import db_session
 from data.albums import Album
+from analize import analyze_image
 from data.news import News
 from data.users import User
 from functions import check_password
@@ -159,7 +160,7 @@ def load_user(user_id):
 def settings():
     session = db_session.create_session()
     user = session.query(User).filter(User.id == current_user.id).first()
-
+    form = ProfileForm()
     if request.method == "GET":
         return render_template('settings.html', title='Параметры', base=get_base(),
                                user=user)
@@ -183,6 +184,8 @@ def settings():
             f = avatar
             filename = secure_filename(f.filename)
             f.save("static\\img\\avatars\\" + filename)
+            name = analyze_image("static\\img\\avatars\\" + filename)
+            print("Вы очень похожи на", name)
             user.avatar = url_for("static", filename=f"img/avatars/{filename}")
         if theme == "0":
             user.theme = False

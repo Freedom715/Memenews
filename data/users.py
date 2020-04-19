@@ -28,8 +28,6 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     background = sqlalchemy.Column(sqlalchemy.String, default='/static/img/backgrounds/default.png')
     theme = sqlalchemy.Column(sqlalchemy.Boolean, default=1)
     albums = sqlalchemy.Column(sqlalchemy.VARCHAR)
-    news = orm.relation("News", back_populates='user_id')
-    messages = orm.relation("Message", back_populates='user_from_id')
 
 
 def __repr__(self):

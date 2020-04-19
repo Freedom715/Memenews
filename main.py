@@ -13,9 +13,9 @@ from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 
 import news_resources
+from analize import analyze_image
 from data import db_session
 from data.albums import Album
-from analize import analyze_image
 from data.news import News
 from data.users import User
 from functions import check_password

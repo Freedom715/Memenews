@@ -50,7 +50,7 @@ class NewsListResource(Resource):
             title=args['title'],
             content=args['content'],
             user_id=args['user_id'],
-            #is_published=args['is_published'],
+            # is_published=args['is_published'],
             is_private=args['is_private']
         )
         session.add(news)

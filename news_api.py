@@ -1,5 +1,6 @@
 import flask
 from flask import jsonify, request
+
 from data import db_session
 from data.news import News
 

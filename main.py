@@ -4,8 +4,8 @@ from random import choice
 from flask import Flask, render_template, redirect, request, make_response, session, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import Api
-# from sqlalchemy import or_
 from flask_wtf import FlaskForm
+from sqlalchemy import or_
 from werkzeug.exceptions import abort
 from werkzeug.utils import secure_filename
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField, BooleanField
@@ -15,6 +15,7 @@ from wtforms.validators import DataRequired
 import news_resources
 from data import db_session
 from data.albums import Album
+from data.messages import Message
 from data.news import News
 from data.users import User
 from functions import check_password
@@ -57,7 +58,6 @@ class NewsForm(FlaskForm):
     content = "Содержание"
     is_private = "Личное"
     submit = 'Применить'
-    images = ["aaa"]
 
 
 class ProfileForm(FlaskForm):
@@ -71,6 +71,10 @@ class ProfileForm(FlaskForm):
 class UsersForm(FlaskForm):
     find_string = StringField('Поиск людей')
     submit = SubmitField('Найти')
+
+
+class Messages(FlaskForm):
+    pass
 
 
 def get_base():
@@ -121,9 +125,46 @@ def add_album():
     return render_template('add_album.html', title='Добавление альбома', form=form, base=get_base())
 
 
-@app.route('/messages/<user_id>')
-def messages(user_id):
-    return render_template('messages.html', base=get_base())
+@app.route('/messages/<user_id>', methods=['GET', 'POST'])
+@login_required
+def messenger(user_id):
+    session = db_session.create_session()
+    user = session.query(User).filter(User.id == user_id).first()
+    if request.method == "GET":
+        messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
+                                                 Message.user_to == current_user.id))
+        return render_template('messenger.html', base=get_base(), messages=messages, user=user)
+    elif request.method == "POST":
+        messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
+                                                 Message.user_to == current_user.id))
+        text = request.form.get("text")
+        message = Message()
+        message.text = text
+        message.user_from_id = current_user.id
+        message.user_to = session.query(User).filter(User.id == user_id).first().id
+        session.add(message)
+        session.commit()
+        return render_template('messenger.html', base=get_base(), messages=messages, user=user)
+
+
+@app.route('/messages')
+@login_required
+def messages():
+    session = db_session.create_session()
+    messages = session.query(Message).filter(
+        or_(Message.user_from_id == current_user.id, Message.user_to == current_user.id)).all()
+    people_id = []
+    people = []
+    for elem in messages:
+        if not (elem.user_to in people_id or elem.user_from_id in people_id):
+            if elem.user_to == current_user.id:
+                people.append(session.query(User).filter(User.id == elem.user_from_id).first())
+                people_id.append(elem.user_from_id)
+            else:
+                people.append(session.query(User).filter(User.id == elem.user_to).first())
+                people_id.append(elem.user_to)
+    print(people_id)
+    return render_template('messages.html', base=get_base(), people=people)
 
 
 @app.route('/album/<album_id>')
@@ -243,8 +284,6 @@ def add_news():
         session.merge(current_user)
         session.commit()
         return redirect('/')
-    return render_template('add_post.html', title='Добавление новости',
-                           form=form, base=get_base())
 
 
 @app.route('/news/<int:id>', methods=['GET', 'POST'])
@@ -319,6 +358,7 @@ def login():
     if form.validate_on_submit():
         session = db_session.create_session()
         user = session.query(User).filter(User.email == form.email.data).first()
+        print(user)
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             return redirect("/")

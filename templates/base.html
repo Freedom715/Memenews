@@ -31,14 +31,15 @@
    .div1 {
     margin: 2.0em 2.0em 0em;
     }
+
     </style>
 </head>
 <body>
 <header>
     <nav class="navbar navbar-dark bg-dark">
-        <a class="navbar-brand" href="/">Наше приложение</a>
-        <a class="navbar-brand" href="/">К ленте</a>
+        <a class="navbar-brand" href="/">Лента</a>
         {% if current_user.is_authenticated %}
+        <a class="navbar-brand" href="/messages">Телеграф</a>
         <a class="navbar-brand" href="/construct">Конструктор</a>
         <a class="navbar-brand" href="/people">Люди</a>
         <a class="navbar-brand" href="/profile/{{current_user.id}}">

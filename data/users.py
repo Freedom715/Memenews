@@ -29,14 +29,11 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     theme = sqlalchemy.Column(sqlalchemy.Boolean, default=1)
     albums = sqlalchemy.Column(sqlalchemy.VARCHAR)
 
+    def __repr__(self):
+        return f"<User> {self.id} {self.name} {self.email}"
 
-def __repr__(self):
-    return f"<User> {self.id} {self.name} {self.email}"
+    def set_password(self, password):
+        self.hashed_password = generate_password_hash(password)
 
-
-def set_password(self, password):
-    self.hashed_password = generate_password_hash(password)
-
-
-def check_password(self, password):
-    return check_password_hash(self.hashed_password, password)
+    def check_password(self, password):
+        return check_password_hash(self.hashed_password, password)

@@ -5,6 +5,9 @@ from fastai.vision import load_learner, defaults, open_image
 defaults.device = torch.device('cpu')
 learn = load_learner('neuro')
 
+# print(torch.__version__)
+# print(torchvision.__version__)
+# print(fastai.__version__)
 
 def analyze_image(filename):
     img = open_image(filename)

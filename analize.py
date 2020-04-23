@@ -1,5 +1,5 @@
-import torchvision
 from fastai.imports import torch
+import fastai
 from fastai.vision import load_learner, defaults, open_image
 
 defaults.device = torch.device('cpu')
@@ -23,5 +23,5 @@ def analyze_image(filename):
     return pred_class, pred[:2]
 
 
-print(torchvision.__version__)
-print(analyze_image('static/img/avatars/coolstalin.jpg'))
+#print(fastai.__version__)
+#print(analyze_image('static/img/avatars/coolstalin.jpg'))

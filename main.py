@@ -74,7 +74,7 @@ class UsersForm(FlaskForm):
     submit = SubmitField('Найти')
 
 
-class Messages(FlaskForm):
+class MemesForm(FlaskForm):
     pass
 
 
@@ -201,7 +201,6 @@ def load_user(user_id):
 def settings():
     session = db_session.create_session()
     user = session.query(User).filter(User.id == current_user.id).first()
-    form = ProfileForm()
     if request.method == "GET":
         return render_template('settings.html', title='Параметры', base=get_base(),
                                user=user)
@@ -237,6 +236,11 @@ def settings():
 
         session.commit()
         return redirect(f'/profile/{current_user.id}')
+
+
+@app.route('/like_post/<news_id>', methods=['POST'])
+def like_post(news_id):
+    return redirect('/index')
 
 
 @app.route('/profile/<user_id>')
@@ -298,9 +302,9 @@ def edit_news(id):
         news = session.query(News).filter(News.id == id,
                                           News.user == current_user).first()
         if news:
-            form.title.data = news.title
-            form.content.data = news.content
-            form.is_private.data = news.is_private
+            form.title = news.title
+            form.content = news.content
+            form.is_private = news.is_private
         else:
             abort(404)
     if form.validate_on_submit():
@@ -308,9 +312,17 @@ def edit_news(id):
         news = session.query(News).filter(News.id == id,
                                           News.user == current_user).first()
         if news:
-            news.title = form.title.data
-            news.content = form.content.data
-            news.is_private = form.is_private.data
+            news.title = request.form.get("title")
+            news.content = request.form.get("content")
+            news.is_private = request.form.get("is_private")
+
+            f = request.files.get("images")
+            if f:
+                print(f)
+                filename = secure_filename(f.filename)
+                print(filename)
+                f.save("static\\img\\images\\" + filename)
+                news.image = url_for("static", filename=f"img/images/{filename}")
             session.commit()
             return redirect('/')
         else:
@@ -335,10 +347,17 @@ def get_people():
                            js=js)
 
 
-@app.route('/construct')
+@app.route('/construct', methods=['GET', 'POST'])
 @login_required
 def constructor():
-    return render_template("memes.html", title='Коструктор', base=get_base())
+    form = MemesForm()
+    if form.validate_on_submit():
+        f = request.files.get("images")
+        if f:
+            filename = secure_filename(f.filename)
+            path = "static\\img\\neuro" + filename
+            f.save(path)
+    return render_template("memes.html", title='Коструктор', base=get_base(), path=path)
 
 
 @app.route('/news_delete/<int:id>', methods=['GET', 'POST'])

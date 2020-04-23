@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="col-xl-10">
 <h1>Добавление новости</h1>
 <form action="" method="post"  enctype="multipart/form-data">
     {{ form.hidden_tag() }}
@@ -8,16 +9,16 @@
     <div class="form-group">
         <label for="title1">Заголовок</label>
         <div class="input-group mb-3">
-            <input type="text" class="form-control" id="title1" aria-label="Заголовок"
+            <input type="text" class="form-control" id="title1" aria-label={{form.title}}
                    aria-describedby="basic-addon1" name="title"
-                   placeholder="Заголовок" required>
+                   placeholder={{form.title}} required>
         </div>
     </div>
     <div class="form-group">
         <div class="mb-3">
             <label for="validationTextarea">Текст поста</label>
             <textarea class="form-control" id="validationTextarea"
-                      placeholder="Текст" name="content" required></textarea>
+                      placeholder="{{form.text}}" name="content"></textarea>
         </div>
     </div>
     <div class="form-group">
@@ -44,7 +45,7 @@
 
 
 </form>
-
+</div>
 <script>
 bsCustomFileInput.init()
 

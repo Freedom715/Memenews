@@ -1,6 +1,8 @@
 import datetime
+import os
 from random import choice
 
+import requests
 from flask import Flask, render_template, redirect, request, make_response, session, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import Api
@@ -13,7 +15,7 @@ from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 
 import news_resources
-from analize import analyze_image
+from analize import analyze_image_meme, analyze_image_dog, analyze_image_lion
 from data import db_session
 from data.albums import Album
 from data.messages import Message
@@ -111,7 +113,7 @@ def add_album():
             f = request.files.get("images")
             if f:
                 filename = secure_filename(f.filename)
-                f.save("static\\img\\photos\\covers\\" + filename)
+                f.save("static/img/photos/covers/" + filename)
                 album.cover = url_for("static", filename=f"img/photos/covers/{filename}")
                 album.photos = url_for("static", filename=f"img/photos/covers/{filename}")
             else:
@@ -133,11 +135,11 @@ def messenger(user_id):
     user = session.query(User).filter(User.id == user_id).first()
     if request.method == "GET":
         messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
-                                                 Message.user_to == current_user.id))
+                                                     Message.user_to == current_user.id))
         return render_template('messenger.html', base=get_base(), messages=messages, user=user)
     elif request.method == "POST":
         messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
-                                                 Message.user_to == current_user.id))
+                                                     Message.user_to == current_user.id))
         text = request.form.get("text")
         message = Message()
         message.text = text
@@ -218,13 +220,13 @@ def settings():
             f = background
             filename = secure_filename(f.filename)
             print(filename)
-            f.save("static\\img\\backgrounds\\" + filename)
+            f.save("static/img/backgrounds/" + filename)
             user.background = url_for("static", filename=f"img/backgrounds/{filename}")
         if avatar:
             f = avatar
             filename = secure_filename(f.filename)
-            f.save("static\\img\\avatars\\" + filename)
-            name = analyze_image("static\\img\\avatars\\" + filename)
+            f.save("static/img/avatars/" + filename)
+            name = analyze_image_meme("static/img/avatars/" + filename)
             print("Вы очень похожи на", name)
             user.avatar = url_for("static", filename=f"img/avatars/{filename}")
         if theme == "0":
@@ -279,16 +281,17 @@ def add_news():
         news = News()
         news.title = request.form.get("title")
         news.content = request.form.get("content")
-        news.is_private = request.form.get("private")
+        news.user_id = current_user.id
+        private = request.form.get("private")
+        news.is_private = 0 if private is None else 1
         f = request.files.get("images")
         if f:
             print(f)
             filename = secure_filename(f.filename)
             print(filename)
-            f.save("static\\img\\images\\" + filename)
+            f.save("static/img/images/" + filename)
             news.image = url_for("static", filename=f"img/images/{filename}")
-        current_user.news.append(news)
-        session.merge(current_user)
+        session.add(news)
         session.commit()
         return redirect('/')
 
@@ -314,14 +317,14 @@ def edit_news(id):
         if news:
             news.title = request.form.get("title")
             news.content = request.form.get("content")
-            news.is_private = request.form.get("is_private")
-
+            private = request.form.get("private")
+            news.is_private = 0 if private is None else 1
             f = request.files.get("images")
             if f:
                 print(f)
                 filename = secure_filename(f.filename)
                 print(filename)
-                f.save("static\\img\\images\\" + filename)
+                f.save("static/img/images/" + filename)
                 news.image = url_for("static", filename=f"img/images/{filename}")
             session.commit()
             return redirect('/')
@@ -347,17 +350,38 @@ def get_people():
                            js=js)
 
 
-@app.route('/construct', methods=['GET', 'POST'])
+@app.route('/construct/<neuroname>', methods=['GET', 'POST'])
 @login_required
-def constructor():
+def constructor(neuroname):
     form = MemesForm()
+    path = ["static/img/neuro/pepe.jpg", "static/img/neuro/pepe.jpg"]
     if form.validate_on_submit():
         f = request.files.get("images")
         if f:
             filename = secure_filename(f.filename)
-            path = "static\\img\\neuro" + filename
-            f.save(path)
-    return render_template("memes.html", title='Коструктор', base=get_base(), path=path)
+            filepath = "static/img/neuro/user/" + filename
+            f.save(filepath)
+            path[0] = url_for("static", filename=f"img/neuro/user/{filename}")
+    if neuroname == 'meme':
+        name = analyze_image_meme(path[0].lstrip('/'))
+        print(name)
+    if neuroname == 'lions':
+        name = analyze_image_lion(path[0].lstrip('/'))
+        print(name)
+    if neuroname == 'cat_dogs':
+        name = analyze_image_dog(path[0].lstrip('/'))
+        print(name)
+        response = requests.get('https://api.thecatapi.com/v1/images/search')
+        json_response = response.json()
+        url = json_response[0]['url']
+        response = requests.get(url)
+        os.remove('static/img/neuro/user/tmpcat.jpg')
+        f = open("static/img/neuro/user/tmpcat.jpg", "wb")
+        f.write(response.content)
+        f.close()
+        path[1] = url_for("static", filename="img/neuro/user/tmpcat.jpg").lstrip("/")
+    path = [('/' + i) if not (i.startswith("/")) else i for i in path]
+    return render_template("memes.html", title='Коструктор', base=get_base(), path=path, form=form)
 
 
 @app.route('/news_delete/<int:id>', methods=['GET', 'POST'])

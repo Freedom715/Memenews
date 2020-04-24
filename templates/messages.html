@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="col">
 <div class="col-10 border">
 </div>
-
+<div class="row justify-content-center">
 <div class="col-8 border">
     {% for elem in people %}
     <div class="media">
@@ -21,5 +22,7 @@
     </div>
     {% endfor %}
 </div>
+</div>
+    </div>
 
 {% endblock %}

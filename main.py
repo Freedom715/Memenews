@@ -355,6 +355,8 @@ def get_people():
 def constructor(neuroname):
     form = MemesForm()
     path = ["static/img/neuro/pepe.jpg", "static/img/neuro/pepe.jpg"]
+    # Здесь нужно внизу картинок выводить их описание, мол Ты похож на того-того
+    # Это можно сделать с помощью словаря
     if form.validate_on_submit():
         f = request.files.get("images")
         if f:
@@ -365,9 +367,11 @@ def constructor(neuroname):
     if neuroname == 'meme':
         name = analyze_image_meme(path[0].lstrip('/'))
         print(name)
+        path[1] = url_for("static", filename=f"img/neuro/{name[0]}.jpg").lstrip("/")
     if neuroname == 'lions':
         name = analyze_image_lion(path[0].lstrip('/'))
         print(name)
+        path[1] = url_for("static", filename=f"img/neuro/{name[0]}.jpg").lstrip("/")
     if neuroname == 'cat_dogs':
         name = analyze_image_dog(path[0].lstrip('/'))
         print(name)

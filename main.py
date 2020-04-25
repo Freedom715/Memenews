@@ -35,14 +35,6 @@ api.add_resource(news_resources.NewsListResource, '/api/v2/news')
 api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
 
 
-def create_app():
-    db_session.global_init("db/Memenews.sqlite")
-    # app.register_blueprint(news_api.blueprint)
-    api.add_resource(news_resources.NewsListResource, '/api/v2/news')
-    api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
-    return app
-
-
 class BaseForm(FlaskForm):
     background = ""
     text_color = 'white'
@@ -90,6 +82,10 @@ class UsersForm(FlaskForm):
 
 class MemesForm(FlaskForm):
     pass
+
+
+def create_app():
+    return app
 
 
 def get_base():
@@ -203,10 +199,6 @@ def add_friend(user_id):
             user.friends = user.friends[:-1] + ', ' + str(user_id) + "'"
         session.commit()
     return redirect(f'/profile/{user_id}')
-
-
-def create_app(config_name):
-    return app
 
 
 @login_manager.user_loader
@@ -379,7 +371,8 @@ def constructor(neuroname):
            'american_pit_bull_terrier': 'американский питбультерьер', 'basset_hound': 'Бассет',
            'beagle': 'Бигль', 'boxer': 'боксер',
            'chihuahua': 'чихуахуа',
-           'english_cocker_spaniel': 'английский кокер-спаниель', 'english_setter': 'английский сеттер', 'german_shorthaired': 'немецкий курцхаар',
+           'english_cocker_spaniel': 'английский кокер-спаниель', 'english_setter': 'английский сеттер',
+           'german_shorthaired': 'немецкий курцхаар',
            'great_pyrenees': '', 'havanese': '',
            'japanese_chin': '', 'keeshond': '', 'leonberger': '', 'miniature_pinscher': '',
            'newfoundland': '', 'pomeranian': '',
@@ -542,4 +535,3 @@ if __name__ == '__main__':
     api.add_resource(news_resources.NewsListResource, '/api/v2/news')
     api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
     app.run()
-

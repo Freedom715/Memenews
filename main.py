@@ -21,7 +21,7 @@ from data.albums import Album
 from data.messages import Message
 from data.news import News
 from data.users import User
-from functions import check_password
+from functions import check_password, get_time
 
 app = Flask(__name__)
 api = Api(app)
@@ -140,22 +140,24 @@ def add_album():
 @login_required
 def messenger(user_id):
     session = db_session.create_session()
-    user = session.query(User).filter(User.id == user_id).first()
+    user_to = session.query(User).filter(User.id == user_id).first()
     if request.method == "GET":
         messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
-                                                     Message.user_to == current_user.id))
-        return render_template('messenger.html', base=get_base(), messages=messages, user=user)
+                                                     Message.user_to_id == current_user.id))
+        return render_template('messenger.html', base=get_base(), messages=messages, user_to=user_to,
+                               get_time=get_time)
     elif request.method == "POST":
         messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
-                                                     Message.user_to == current_user.id))
+                                                     Message.user_to_id == current_user.id))
         text = request.form.get("text")
         message = Message()
         message.text = text
         message.user_from_id = current_user.id
-        message.user_to = session.query(User).filter(User.id == user_id).first().id
+        message.user_to_id = session.query(User).filter(User.id == user_id).first().id
         session.add(message)
         session.commit()
-        return render_template('messenger.html', base=get_base(), messages=messages, user=user)
+        return render_template('messenger.html', base=get_base(), messages=messages, user_to=user_to,
+                               get_time=get_time)
 
 
 @app.route('/messages')
@@ -163,16 +165,16 @@ def messenger(user_id):
 def messages():
     session = db_session.create_session()
     messages = session.query(Message).filter(
-        or_(Message.user_from_id == current_user.id, Message.user_to == current_user.id)).all()
+        or_(Message.user_from_id == current_user.id, Message.user_to_id == current_user.id)).all()
     people_id = []
     people = []
     for elem in messages:
-        if not (elem.user_to in people_id or elem.user_from_id in people_id):
-            if elem.user_to == current_user.id:
+        if not (elem.user_to_id in people_id or elem.user_from_id in people_id):
+            if elem.user_to_id == current_user.id:
                 people.append(session.query(User).filter(User.id == elem.user_from_id).first())
                 people_id.append(elem.user_from_id)
             else:
-                people.append(session.query(User).filter(User.id == elem.user_to).first())
+                people.append(session.query(User).filter(User.id == elem.user_to_id).first())
                 people_id.append(elem.user_to)
     print(people_id)
     return render_template('messages.html', base=get_base(), people=people)

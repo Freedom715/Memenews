@@ -11,7 +11,7 @@ class Message(SqlAlchemyBase, SerializerMixin):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
                            autoincrement=True)
     text = sqlalchemy.Column(sqlalchemy.String)
-    datatime = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now)
-    user_to = sqlalchemy.Column(sqlalchemy.Integer,
-                                sqlalchemy.ForeignKey("users.id"))
+    time = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now)
+    user_to_id = sqlalchemy.Column(sqlalchemy.Integer,
+                                   sqlalchemy.ForeignKey("users.id"))
     user_from_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"))

@@ -7,10 +7,11 @@
 <!--    </div>-->
 <!--    <div class="col-1 ml-xl-3 border"></div>-->
 <!--</div>-->
-<div class="col-10 border">
+<div class="col-10">
 </div>
+<div class="col-10">
 <form action="" method="post" enctype="multipart/form-data">
-    <div class="col-8 overflow-auto">
+    <div class="col-xl-100">
         {% for elem in messages %}
         {% if elem.user_from_id == current_user.id %}
         <div class="media">
@@ -45,7 +46,7 @@
         {% endif %}
         {% endfor %}
     </div>
-    <div class="input-group mb-3 col-8">
+    <div class="input-group mb-3">
         <input type="text" class="form-control" placeholder="Наберите сообщение"
                aria-label="Наберите сообщение" aria-describedby="button-addon2" name="text">
         <div class="input-group-append">
@@ -54,6 +55,7 @@
     </div>
 
 </form>
+</div>
 
 
 {% endblock %}

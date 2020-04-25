@@ -29,10 +29,6 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=365)
 login_manager = LoginManager()
 login_manager.init_app(app)
-db_session.global_init("db/Memenews.sqlite")
-# app.register_blueprint(news_api.blueprint)
-api.add_resource(news_resources.NewsListResource, '/api/v2/news')
-api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
 
 
 class BaseForm(FlaskForm):
@@ -80,8 +76,16 @@ class UsersForm(FlaskForm):
     submit = SubmitField('Найти')
 
 
+def choice_name():
+    return choice(
+        ['Хм... Наша нейросеть думает что эта фотография похожа на ',
+         'Это фото похоже на *барабанная дробь* ',
+         'Мы и подумать не могли что существует вещь похожая на ',
+         'Очень малый процент людей похожи на '])
+
+
 class MemesForm(FlaskForm):
-    pass
+    name = choice_name()
 
 
 def get_base():
@@ -195,10 +199,6 @@ def add_friend(user_id):
             user.friends = user.friends[:-1] + ', ' + str(user_id) + "'"
         session.commit()
     return redirect(f'/profile/{user_id}')
-
-
-def create_app(config_name):
-    return app
 
 
 @login_manager.user_loader
@@ -369,14 +369,22 @@ def constructor(neuroname):
            'Siamese': 'Сиамская кошка', 'Sphynx': 'Сфинкс',
            'american_bulldog': 'американский бульдог',
            'american_pit_bull_terrier': 'американский питбультерьер', 'basset_hound': 'Бассет',
-           'beagle': 'Бигль', 'boxer': 'боксер',
-           'chihuahua': 'чихуахуа',
-           'english_cocker_spaniel': 'английский кокер-спаниель', 'english_setter': 'английский сеттер', 'german_shorthaired': 'немецкий курцхаар',
-           'great_pyrenees': '', 'havanese': '',
-           'japanese_chin': '', 'keeshond': '', 'leonberger': '', 'miniature_pinscher': '',
-           'newfoundland': '', 'pomeranian': '',
-           'pug': '', 'saint_bernard': '', 'samoyed': '', 'scottish_terrier': '', 'shiba_inu': '',
-           'staffordshire_bull_terrier': '', 'wheaten_terrier': '', 'yorkshire_terrier': ''}
+           'beagle': 'Бигль', 'boxer': 'боксер', 'chihuahua': 'чихуахуа',
+           'english_cocker_spaniel': 'английский кокер-спаниель',
+           'english_setter': 'английский сеттер', 'german_shorthaired': 'немецкий курцхаар',
+           'great_pyrenees': 'Пиренейская горная собака', 'havanese': 'Гаванский бишон',
+           'japanese_chin': 'Японский Хин', 'keeshond': 'Кеесхонд', 'leonberger': 'Леонбергер',
+           'miniature_pinscher': 'Миниатюрный пинчер',
+           'newfoundland': 'Ньюфауленд', 'pomeranian': 'Померанский шпиц',
+           'pug': 'Мопс', 'saint_bernard': 'Сенбернар', 'samoyed': 'Саемод',
+           'scottish_terrier': 'Шотландский терьер', 'shiba_inu': 'Сиба-Ину',
+           'staffordshire_bull_terrier': 'Стаффордширский бультерьер',
+           'wheaten_terrier': 'Ирландский мягкошёрстный пшеничный терьер',
+           'yorkshire_terrier': 'Йоркширский терьер', 'bom_bom': 'Дед Бом-бом',
+           'bushemi': 'Стив Бушеми и его глаза', 'goblin': 'Дмитрий (Гоблин) Пучков',
+           'leopard': 'Леопард', 'lion': 'Лев', 'people': 'обычный человек',
+           'pepe': 'лягушонок Пепе', 'sheldon': 'Шелдон Купер (Теория Большого взрыва)',
+           'tiger': 'Тигр', 'yoda': 'малыш Йода (Мандалорец)'}
     form = MemesForm()
     path = ["static/img/neuro/pepe.jpg", "static/img/neuro/pepe.jpg"]
     # Здесь нужно внизу картинок выводить их описание, мол Ты похож на того-того
@@ -392,11 +400,12 @@ def constructor(neuroname):
         name = analyze_image_meme(path[0].lstrip('/'))
         print(name)
         path[1] = url_for("static", filename=f"img/neuro/{name[0]}.jpg").lstrip("/")
-    if neuroname == 'lions':
+        name = form.name + dct[name[0]]
+    elif neuroname == 'lions':
         name = analyze_image_lion(path[0].lstrip('/'))
         print(name)
         path[1] = url_for("static", filename=f"img/neuro/{name[0]}.jpg").lstrip("/")
-    if neuroname == 'cat_dogs':
+    elif neuroname == 'cat_dogs':
         name = analyze_image_dog(path[0].lstrip('/'))
         print(name)
         response = requests.get('https://api.thecatapi.com/v1/images/search')
@@ -408,8 +417,10 @@ def constructor(neuroname):
         f.write(response.content)
         f.close()
         path[1] = url_for("static", filename="img/neuro/user/tmpcat.jpg").lstrip("/")
+    fact = ''
     path = [('/' + i) if not (i.startswith("/")) else i for i in path]
-    return render_template("memes.html", title='Коструктор', base=get_base(), path=path, form=form)
+    return render_template("memes.html", title='Коструктор', base=get_base(), path=path, form=form,
+                           name=name, fact=fact)
 
 
 @app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
@@ -531,7 +542,11 @@ def session_test():
 
 def main():
     db_session.global_init("db/Memenews.sqlite")
+    # app.register_blueprint(news_api.blueprint)
     api.add_resource(news_resources.NewsListResource, '/api/v2/news')
     api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
     app.run()
 
+
+if __name__ == '__main__':
+    main()

@@ -35,7 +35,7 @@ api.add_resource(news_resources.NewsListResource, '/api/v2/news')
 api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
 
 
-def create_app(config_name):
+def create_app():
     db_session.global_init("db/Memenews.sqlite")
     # app.register_blueprint(news_api.blueprint)
     api.add_resource(news_resources.NewsListResource, '/api/v2/news')

@@ -29,6 +29,10 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=365)
 login_manager = LoginManager()
 login_manager.init_app(app)
+db_session.global_init("db/Memenews.sqlite")
+# app.register_blueprint(news_api.blueprint)
+api.add_resource(news_resources.NewsListResource, '/api/v2/news')
+api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
 
 
 def create_app(config_name):
@@ -201,6 +205,10 @@ def add_friend(user_id):
     return redirect(f'/profile/{user_id}')
 
 
+def create_app(config_name):
+    return app
+
+
 @login_manager.user_loader
 def load_user(user_id):
     session = db_session.create_session()
@@ -361,6 +369,22 @@ def get_people():
 @app.route('/construct/<neuroname>', methods=['GET', 'POST'])
 @login_required
 def constructor(neuroname):
+    dct = {'Abyssinian': 'Абиссинский кот', 'Bengal': 'Бенгальский кот',
+           'Birman': 'Бирманская кошка', 'Bombay': 'Бомбей',
+           'British_Shorthair': 'Британская Короткошерстная Кошка',
+           'Egyptian_Mau': 'Египетский Мау', 'Maine_Coon': 'Мейн-кун',
+           'Persian': 'Персидский кот', 'Ragdoll': 'Рэгдолл', 'Russian_Blue': 'Русская Голубая',
+           'Siamese': 'Сиамская кошка', 'Sphynx': 'Сфинкс',
+           'american_bulldog': 'американский бульдог',
+           'american_pit_bull_terrier': 'американский питбультерьер', 'basset_hound': 'Бассет',
+           'beagle': 'Бигль', 'boxer': 'боксер',
+           'chihuahua': 'чихуахуа',
+           'english_cocker_spaniel': 'английский кокер-спаниель', 'english_setter': 'английский сеттер', 'german_shorthaired': 'немецкий курцхаар',
+           'great_pyrenees': '', 'havanese': '',
+           'japanese_chin': '', 'keeshond': '', 'leonberger': '', 'miniature_pinscher': '',
+           'newfoundland': '', 'pomeranian': '',
+           'pug': '', 'saint_bernard': '', 'samoyed': '', 'scottish_terrier': '', 'shiba_inu': '',
+           'staffordshire_bull_terrier': '', 'wheaten_terrier': '', 'yorkshire_terrier': ''}
     form = MemesForm()
     path = ["static/img/neuro/pepe.jpg", "static/img/neuro/pepe.jpg"]
     # Здесь нужно внизу картинок выводить их описание, мол Ты похож на того-того
@@ -515,7 +539,6 @@ def session_test():
 
 if __name__ == '__main__':
     db_session.global_init("db/Memenews.sqlite")
-    # app.register_blueprint(news_api.blueprint)
     api.add_resource(news_resources.NewsListResource, '/api/v2/news')
     api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
     app.run()

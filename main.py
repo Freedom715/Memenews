@@ -31,6 +31,14 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
+def create_app(config_name):
+    db_session.global_init("db/Memenews.sqlite")
+    # app.register_blueprint(news_api.blueprint)
+    api.add_resource(news_resources.NewsListResource, '/api/v2/news')
+    api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
+    return app
+
+
 class BaseForm(FlaskForm):
     background = ""
     text_color = 'white'
@@ -505,13 +513,10 @@ def session_test():
     return res
 
 
-def main():
+if __name__ == '__main__':
     db_session.global_init("db/Memenews.sqlite")
     # app.register_blueprint(news_api.blueprint)
     api.add_resource(news_resources.NewsListResource, '/api/v2/news')
     api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
     app.run()
 
-
-if __name__ == '__main__':
-    main()

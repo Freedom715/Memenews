@@ -29,6 +29,10 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=365)
 login_manager = LoginManager()
 login_manager.init_app(app)
+db_session.global_init("db/Memenews.sqlite")
+# app.register_blueprint(news_api.blueprint)
+api.add_resource(news_resources.NewsListResource, '/api/v2/news')
+api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
 
 
 class BaseForm(FlaskForm):
@@ -86,6 +90,9 @@ def choice_name():
 
 class MemesForm(FlaskForm):
     name = choice_name()
+
+def create_app():
+    return app
 
 
 def get_base():
@@ -542,13 +549,5 @@ def session_test():
     return res
 
 
-def main():
-    db_session.global_init("db/Memenews.sqlite")
-    # app.register_blueprint(news_api.blueprint)
-    api.add_resource(news_resources.NewsListResource, '/api/v2/news')
-    api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
-    app.run()
-
-
 if __name__ == '__main__':
-    main()
+    app.run()

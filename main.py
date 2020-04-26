@@ -39,7 +39,7 @@ class BaseForm(FlaskForm):
     background = ""
     text_color = 'white'
     back = '#0a0a0a'
-    back_color = 'black'
+    back_color = '#646464'
     font_white = "white"
     js_for_files = ""
 
@@ -82,10 +82,11 @@ class UsersForm(FlaskForm):
 
 def choice_name():
     return choice(
-        ['Хм... Наша нейросеть думает что эта фотография похожа на ',
-         'Это фото похоже на *барабанная дробь* ',
-         'Мы и подумать не могли что существует вещь похожая на ',
-         'Очень малый процент людей похожи на '])
+        ['Хм... Наша нейросеть предполагает что на этой фотографии ',
+         'Похоже, что на этом фото ',
+         "По мнению нейросети на этой картинке "])
+         #'Мы и подумать не могли что существует вещь похожая на '])
+         #'Очень малый процент людей похожи на '])
 
 
 class MemesForm(FlaskForm):
@@ -101,12 +102,12 @@ def get_base():
         base.background = current_user.background
         base.text_color = 'white' if not current_user.theme else 'black'
         base.back = '#0a0a0a' if not current_user.theme else '#f5f5f5'
-        base.back_color = 'black' if not current_user.theme else 'white'
+        base.back_color = '#1e1e1e' if not current_user.theme else '#969696'
     else:
         base.background = ""
         base.text_color = 'black'
         base.back = '#0a0a0a'
-        base.back_color = 'white'
+        base.back_color = '#969696'
     base.js_for_files = url_for("static", filename="js/bs-custom-file-input.js")
     return base
 
@@ -367,9 +368,9 @@ def get_people():
                            js=js)
 
 
-@app.route('/construct/<neuroname>', methods=['GET', 'POST'])
+@app.route('/neuro/<neuroname>', methods=['GET', 'POST'])
 @login_required
-def constructor(neuroname):
+def neuro(neuroname):
     dct = {'Abyssinian': 'Абиссинский кот', 'Bengal': 'Бенгальский кот',
            'Birman': 'Бирманская кошка', 'Bombay': 'Бомбей',
            'British_Shorthair': 'Британская Короткошерстная Кошка',
@@ -396,8 +397,6 @@ def constructor(neuroname):
            'tiger': 'Тигр', 'yoda': 'малыш Йода (Мандалорец)'}
     form = MemesForm()
     path = ["static/img/neuro/pepe.jpg", "static/img/neuro/pepe.jpg"]
-    # Здесь нужно внизу картинок выводить их описание, мол Ты похож на того-того
-    # Это можно сделать с помощью словаря
     if form.validate_on_submit():
         f = request.files.get("images")
         if f:
@@ -409,13 +408,17 @@ def constructor(neuroname):
         name = analyze_image_meme(path[0].lstrip('/'))
         print(name)
         path[1] = url_for("static", filename=f"img/neuro/{name[0]}.jpg").lstrip("/")
-        name = form.name + dct[name[0]]
+        name = form.name + dct[str(name[0]).split()[0]]
     elif neuroname == 'lions':
         name = analyze_image_lion(path[0].lstrip('/'))
         print(name)
         path[1] = url_for("static", filename=f"img/neuro/{name[0]}.jpg").lstrip("/")
+        name = form.name + dct[str(name[0]).split()[0]]
+        print(name)
     elif neuroname == 'cat_dogs':
         name = analyze_image_dog(path[0].lstrip('/'))
+        print(name)
+        name = form.name + dct[str(name[0]).split()[0]]
         print(name)
         response = requests.get('https://api.thecatapi.com/v1/images/search')
         json_response = response.json()
@@ -428,7 +431,7 @@ def constructor(neuroname):
         path[1] = url_for("static", filename="img/neuro/user/tmpcat.jpg").lstrip("/")
     fact = ''
     path = [('/' + i) if not (i.startswith("/")) else i for i in path]
-    return render_template("memes.html", title='Коструктор', base=get_base(), path=path, form=form,
+    return render_template("neuro.html", title='Нейросети', base=get_base(), path=path, form=form,
                            name=name, fact=fact)
 
 

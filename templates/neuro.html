@@ -6,8 +6,9 @@
         <img src={{path[0]}} width="300" height="300">
         <img src={{path[1]}} width="300" height="300">
     </div>
-    <h2 style="color:red">{{name}}</h2>
-    <h5> Забавный факт: {{fact}} </h5>
+    <br>
+    <h2 align="center">{{name}}</h2>
+<!--    <h5> Забавный факт: {{fact}} </h5>-->
 </div>
 <form method="post" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
@@ -28,14 +29,23 @@
             </div>
         </div>
         <div class="div1">
-            <a href="/construct/meme" class="btn btn-secondary btn-lg btn-block">Мемы</a> <br></div>
+            <a href="/neuro/meme" class="btn btn-secondary btn-lg btn-block">Мемы</a> <br></div>
         <div class="div1">
-            <a href="/construct/lions" class="btn btn-secondary btn-lg btn-block">Лев, тигр и леопард</a>
+            <a href="/neuro/lions" class="btn btn-secondary btn-lg btn-block">Лев, тигр и леопард</a>
             <br>
         </div>
         <div class="div1">
-            <a href="/construct/cat_dogs" class="btn btn-primary btn-lg btn-secondary btn-block">Кошечка или
+            <a href="/neuro/cat_dogs" class="btn btn-primary btn-lg btn-secondary btn-block">Кошечка или
                 собачка?</a> <br></div>
     </div>
 </form>
+<script>
+bsCustomFileInput.init()
+
+      var btn = document.getElementById('btnResetForm')
+      var form = document.querySelector('form')
+      btn.addEventListener('click', function () {
+        form.reset()
+      })
+</script>
 {% endblock %}

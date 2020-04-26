@@ -7,40 +7,42 @@
     <form action="" method="post" enctype="multipart/form-data">
         <div class="col-xl-100">
             {% for elem in messages %}
-            {% if elem.user_from_id == current_user.id and elem.user_to_id == user_to.id%}
-            <div class="media">
+            <div class="block">
+                {% if elem.user_from_id == current_user.id and elem.user_to_id == user_to.id%}
+                <div class="media">
 
-                <a href="/profile/{{current_user.id}}"><img src="{{current_user.avatar}}"
-                                                            class="align-self-center mr-3" alt="PEP8"
-                                                            width="100"
-                                                            height="100"
-                                                            title="{{current_user.name}}"></a>
-                <div class="media-body md-0">
-                    <h5>{{current_user.name}}</h5>
-                    <p class="text-break">
-                        {{elem.text }} <br>
-                        {{get_time(elem.time.date(), elem.time.time())}}
-                    </p>
+                    <a href="/profile/{{current_user.id}}"><img src="{{current_user.avatar}}"
+                                                                class="align-self-center mr-3" alt="PEP8"
+                                                                width="100"
+                                                                height="100"
+                                                                title="{{current_user.name}}"></a>
+                    <div class="media-body md-0">
+                        <h5>{{current_user.name}}</h5>
+                        <p class="text-break">
+                            {{elem.text }} <br>
+                            {{get_time(elem.time.date(), elem.time.time())}}
+                        </p>
+                    </div>
                 </div>
-            </div>
-            {% endif %}
-            {% if elem.user_to_id == current_user.id and elem.user_from_id == user_to.id%}
-            <div class="media">
-                <div class="media-body md-0">
-                    <h5 align="right">{{user_to.name}}</h5>
-                    <p class="text-break text-right">
-                        {{elem.text }} <br>
-                        {{get_time(elem.time.date(), elem.time.time())}}
-                    </p>
+                {% endif %}
+                {% if elem.user_to_id == current_user.id and elem.user_from_id == user_to.id%}
+                <div class="media">
+                    <div class="media-body md-0">
+                        <h5 align="right">{{user_to.name}}</h5>
+                        <p class="text-break text-right">
+                            {{elem.text }} <br>
+                            {{get_time(elem.time.date(), elem.time.time())}}
+                        </p>
+                    </div>
+                    <a href="/profile/{{user_to.id}}"><img src="{{user_to.avatar}}"
+                                                           class="align-self-center mr-3" alt="PEP8"
+                                                           width="100"
+                                                           height="100"
+                                                           title="{{user_to.name}}"
+                                                           hspace="20"></a>
                 </div>
-                <a href="/profile/{{user_to.id}}"><img src="{{user_to.avatar}}"
-                                                       class="align-self-center mr-3" alt="PEP8"
-                                                       width="100"
-                                                       height="100"
-                                                       title="{{user_to.name}}"
-                                                       hspace="20"></a>
+                {% endif %}
             </div>
-            {% endif %}
             {% endfor %}
         </div>
         <div class="input-group mb-3">

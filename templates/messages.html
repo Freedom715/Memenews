@@ -3,11 +3,7 @@
 {% block content %}
 <div class="col">
     <div class="row justify-content-center">
-        <div class="col-10 border">
-        </div>
-    </div>
-    <div class="row justify-content-center">
-        <div class="col-8 border">
+        <div class="col-10 block">
             {% for elem in people %}
             <div class="media">
                 <a href="/profile/{{elem.id}}"> <img src="{{elem.avatar}}"
@@ -16,7 +12,7 @@
                                                      height="100" title="{{elem.name}}">
 
                 </a>
-                <div class="media-body md-0">
+                <div class="media-body">
                     <h2>{{elem.name}}</h2>
                     <a class="btn btn-primary" href="/messages/{{elem.id}}" role="button">Перейти к
                         беседе</a>

@@ -473,20 +473,20 @@ def reqister():
             if form.password.data != form.password_again.data:
                 return render_template('register.html', title='Регистрация',
                                        form=form,
-                                       message="Пароли не совпадают")
+                                       message="Пароли не совпадают", base=get_base())
         else:
             return render_template('register.html', title='Регистрация',
                                    form=form,
-                                   message=check_password(form.password.data))
+                                   message=check_password(form.password.data), base=get_base())
         session = db_session.create_session()
         if session.query(User).filter(User.email == form.email.data).first():
             return render_template('register.html', title='Регистрация',
                                    form=form,
-                                   message="Такой пользователь уже есть")
+                                   message="Такой пользователь уже есть", base=get_base())
         if session.query(User).filter(User.name == form.name.data).first():
             return render_template('register.html', title='Регистрация',
                                    form=form,
-                                   message="Такой пользователь уже есть")
+                                   message="Такой пользователь уже есть", base=get_base())
         album = Album(
             name=form.name.data + ' album',
             cover='/static/img/photos/sample_covers/{}.png'.format(

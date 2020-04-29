@@ -85,12 +85,13 @@ def choice_name():
         ['Хм... Наша нейросеть предполагает что на этой фотографии ',
          'Похоже, что на этом фото ',
          "По мнению нейросети на этой картинке "])
-         #'Мы и подумать не могли что существует вещь похожая на '])
-         #'Очень малый процент людей похожи на '])
+    # 'Мы и подумать не могли что существует вещь похожая на '])
+    # 'Очень малый процент людей похожи на '])
 
 
 class MemesForm(FlaskForm):
     name = choice_name()
+
 
 def create_app():
     return app
@@ -183,7 +184,7 @@ def messages():
                 people_id.append(elem.user_from_id)
             else:
                 people.append(session.query(User).filter(User.id == elem.user_to_id).first())
-                people_id.append(elem.user_to)
+                people_id.append(elem.user_to_id)
     print(people_id)
     return render_template('messages.html', base=get_base(), people=people)
 
@@ -428,7 +429,7 @@ def neuro(neuroname):
         f = open("static/img/neuro/user/tmpcat.jpg", "wb")
         f.write(response.content)
         f.close()
-        path[1] = url_for("static", filename="img/neuro/user/tmpcat.jpg").lstrip("/")
+        path[1] = "static/img/neuro/user/tmpcat.jpg"
     fact = ''
     path = [('/' + i) if not (i.startswith("/")) else i for i in path]
     return render_template("neuro.html", title='Нейросети', base=get_base(), path=path, form=form,
@@ -497,7 +498,8 @@ def reqister():
             name=form.name.data,
             email=form.email.data,
             status=form.status.data,
-            albums=album.name
+            albums=album.name,
+            friends=''
         )
         user.set_password(form.password.data)
         session.add(user)

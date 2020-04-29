@@ -189,6 +189,20 @@ def messages():
     return render_template('messages.html', base=get_base(), people=people)
 
 
+@app.route('/message_delete/<id>', methods=['GET', 'POST'])
+@login_required
+def message_delete(id):
+    session = db_session.create_session()
+    message = session.query(Message).filter(Message.id == id,
+                                            Message.user_from_id == current_user.id).first()
+    if message:
+        session.delete(message)
+        session.commit()
+        return redirect(f'/messages/{message.user_to_id}')
+    else:
+        abort(404)
+
+
 @app.route('/album/<album_id>')
 def album(album_id):
     session = db_session.create_session()

@@ -18,12 +18,6 @@
                 </a>
                 <div class="media-body md-0">
                     <h2>{{item.title}}</h2>
-                    {% if current_user.is_authenticated and current_user == item.user %}
-                    <div>
-                        <a href="/news/{{ item.id }}" class="btn btn-warning">Изменить</a>
-                        <a href="/news_delete/{{ item.id }}" class="btn btn-danger">Удалить</a>
-                    </div>
-                    {% endif %}
                     <p>
                         {{item.content}} <br>
                         {% if item.image %}
@@ -32,7 +26,12 @@
                         {% endif %}
                         Дата написания - {{item.created_date}}
                     </p>
-                    <a href="/news/{{ item.id }}" class="btn btn-secondary">Оценить запись</a>
+                    {% if current_user.is_authenticated and current_user == item.user %}
+                    <div>
+                        <a href="/news/{{ item.id }}" class="btn btn-warning">Изменить</a>
+                        <a href="/news_delete/{{ item.id }}" class="btn btn-danger">Удалить</a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

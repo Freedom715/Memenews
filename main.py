@@ -140,6 +140,7 @@ def add_album():
             session.add(album)
             user = session.query(User).filter(User.id == current_user.id).first()
             user.albums = user.albums.rstrip("'") + ', ' + str(album.id) + "'"
+            print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "создал альбом", album.name)
             session.commit()
             return redirect('/')
     return render_template('add_album.html', title='Добавление альбома', form=form, base=get_base())
@@ -163,6 +164,8 @@ def messenger(user_id):
         message.text = text
         message.user_from_id = current_user.id
         message.user_to_id = session.query(User).filter(User.id == user_id).first().id
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "отправил сообщение пользователю",
+              session.query(User).filter(User.id == user_id).first().name)
         session.add(message)
         session.commit()
         return render_template('messenger.html', base=get_base(), messages=messages, user_to=user_to,
@@ -185,7 +188,6 @@ def messages():
             else:
                 people.append(session.query(User).filter(User.id == elem.user_to_id).first())
                 people_id.append(elem.user_to_id)
-    print(people_id)
     return render_template('messages.html', base=get_base(), people=people)
 
 
@@ -222,6 +224,7 @@ def add_friend(user_id):
             user.friends = "'" + user.friends.strip("'") + ', ' + str(user_id) + "'"
         else:
             user.friends = user.friends[:-1] + ', ' + str(user_id) + "'"
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "сообщение", album.name)
         session.commit()
     return redirect(f'/profile/{user_id}')
 
@@ -268,7 +271,7 @@ def settings():
         elif theme == "1":
             user.theme = True
             print(user.theme)
-
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "сменил настройки")
         session.commit()
         return redirect(f'/profile/{current_user.id}')
 
@@ -324,6 +327,7 @@ def add_news():
             print(filename)
             f.save("static/img/images/" + filename)
             news.image = url_for("static", filename=f"img/images/{filename}")
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "создал пост", news.title)
         session.add(news)
         session.commit()
         return redirect('/')
@@ -354,11 +358,10 @@ def edit_news(id):
             news.is_private = 0 if private is None else 1
             f = request.files.get("images")
             if f:
-                print(f)
                 filename = secure_filename(f.filename)
-                print(filename)
                 f.save("static/img/images/" + filename)
                 news.image = url_for("static", filename=f"img/images/{filename}")
+            print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "отредактировал новость", id)
             session.commit()
             return redirect('/')
         else:
@@ -444,6 +447,7 @@ def neuro(neuroname):
         f.write(response.content)
         f.close()
         path[1] = "static/img/neuro/user/tmpcat.jpg"
+    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "воспользовался нейросетью", neuroname)
     fact = ''
     path = [('/' + i) if not (i.startswith("/")) else i for i in path]
     return render_template("neuro.html", title='Нейросети', base=get_base(), path=path, form=form,
@@ -457,6 +461,7 @@ def news_delete(id):
     news = session.query(News).filter(News.id == id,
                                       News.user == current_user).first()
     if news:
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "удалил новость", news.title, id)
         session.delete(news)
         session.commit()
     else:
@@ -477,6 +482,7 @@ def login():
         return render_template('login.html',
                                message="Неправильный логин или пароль",
                                form=form, base=get_base())
+    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "вошел")
     return render_template('login.html', title='Авторизация', form=form, base=get_base())
 
 
@@ -516,6 +522,7 @@ def register():
             friends=''
         )
         user.set_password(form.password.data)
+        print(datetime.datetime.now(), form.name.data, "зарегистрировался")
         session.add(user)
         session.commit()
         return redirect('/login')
@@ -525,6 +532,7 @@ def register():
 @app.route('/logout')
 @login_required
 def logout():
+    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "вышел")
     logout_user()
     return redirect("/")
 

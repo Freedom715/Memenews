@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col col-xl-4">
-        <h3> Обложка альбома </h3>
-        <img src="{{album.cover}}" width="150" height="150">
-        {% for item in photos %}
-        {% endfor %}
+<div>
+    <img src="{{photo.cover}}"> <br>
+    {% if user==True %}
+    <div class="row justify-content-center">
+        <a href="/photo_delete/{{photo.id}}" class="btn btn-warning">Удалить</a>
     </div>
-    <div class=""></div>
+    {% endif %}
 </div>
 {% endblock %}

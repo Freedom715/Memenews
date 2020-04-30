@@ -1,14 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="col-10" xmlns="http://www.w3.org/1999/html">
-</div>
 <div class="col-10">
     <form action="" method="post" enctype="multipart/form-data">
         <div class="col-xl-100">
             {% for elem in messages %}
             <div class="block">
-                {% if elem.user_from_id == current_user.id and elem.user_to_id == user_to.id%}
+                {% if elem.user_from_id == current_user.id and elem.user_to_id == user_to.id %}
                 <div class="media">
 
                     <a href="/profile/{{current_user.id}}"><img src="{{current_user.avatar}}"
@@ -26,7 +24,7 @@
                     </div>
                 </div>
                 {% endif %}
-                {% if elem.user_to_id == current_user.id and elem.user_from_id == user_to.id%}
+                {% if elem.user_to_id == current_user.id and elem.user_from_id == user_to.id %}
                 <div class="media">
                     <div class="media-body md-0">
                         <h5 align="right">{{user_to.name}}</h5>

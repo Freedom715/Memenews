@@ -48,14 +48,14 @@
         {% for item in form.albums %}
         <li class="list-inline-item">
             <h3>{{item.name}}</h3>
-            <a href="/album/{{item.id}}">
+            <a href="/photo/{{item.id}}">
                 <img src="{{item.cover}}" alt="{{item.cover}}" width="150" height="150">
             </a>
         </li>
         {% endfor %}
     </ul>
     {% if form.user.id == form.cur_user.id %}
-    <a href="/add_album" class="btn btn-secondary">Добавить альбом</a>
+    <a href="/add_photo" class="btn btn-secondary">Добавить фото</a>
     {% endif %}
 </div>
 {% endblock %}

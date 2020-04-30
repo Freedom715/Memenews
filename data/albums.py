@@ -4,7 +4,7 @@ from sqlalchemy_serializer import SerializerMixin
 from .db_session import SqlAlchemyBase
 
 
-class Album(SqlAlchemyBase, SerializerMixin):
+class Photo(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'albums'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
                            autoincrement=True)

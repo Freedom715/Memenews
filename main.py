@@ -17,7 +17,7 @@ from wtforms.validators import DataRequired
 import news_resources
 from analize import analyze_image_meme, analyze_image_dog, analyze_image_lion
 from data import db_session
-from data.albums import Album
+from data.albums import Photo
 from data.messages import Message
 from data.news import News
 from data.users import User
@@ -73,6 +73,7 @@ class ProfileForm(FlaskForm):
     cur_user = current_user
     friends = [current_user]
     error = ''
+    password = PasswordField('Пароль', validators=[DataRequired()])
 
 
 class UsersForm(FlaskForm):
@@ -113,36 +114,36 @@ def get_base():
     return base
 
 
-@app.route('/add_album', methods=['GET', 'POST'])
+@app.route('/add_photo', methods=['GET', 'POST'])
 @login_required
-def add_album():
+def add_photo():
     form = NewsForm()
     if request.method == "GET":
-        return render_template('add_album.html', title='Добавление альбома', form=form,
+        return render_template('add_photo.html', title='Добавление фото', form=form,
                                base=get_base())
     elif request.method == "POST":
         if form.validate_on_submit():
             session = db_session.create_session()
-            album = Album()
-            album.name = request.form.get("title")
-            album.content = request.form.get("content")
-            album.is_private = request.form.get("private")
+            photo = Photo()
+            photo.name = request.form.get("title")
+            photo.content = request.form.get("content")
+            photo.is_private = request.form.get("private")
             f = request.files.get("images")
             if f:
                 filename = secure_filename(f.filename)
                 f.save("static/img/photos/covers/" + filename)
-                album.cover = url_for("static", filename=f"img/photos/covers/{filename}")
-                album.photos = url_for("static", filename=f"img/photos/covers/{filename}")
+                photo.cover = url_for("static", filename=f"img/photos/covers/{filename}")
+                photo.photos = url_for("static", filename=f"img/photos/covers/{filename}")
             else:
-                album.cover = '/static/img/photos/sample_covers/{}.png'.format(
+                photo.cover = '/static/img/photos/sample_covers/{}.png'.format(
                     choice(['ololo', 'trollface', 'i_dont_now', 'aaaaa']))
-                album.photos = ''
-            session.add(album)
+                photo.photos = ''
+            session.add(photo)
             user = session.query(User).filter(User.id == current_user.id).first()
-            user.albums = user.albums.rstrip("'") + ', ' + str(album.id) + "'"
+            user.albums = user.albums.rstrip("'") + ', ' + str(photo.id) + "'"
             session.commit()
             return redirect('/')
-    return render_template('add_album.html', title='Добавление альбома', form=form, base=get_base())
+    return render_template('add_photo.html', title='Добавление фото', form=form, base=get_base())
 
 
 @app.route('/messages/<user_id>', methods=['GET', 'POST'])
@@ -185,7 +186,6 @@ def messages():
             else:
                 people.append(session.query(User).filter(User.id == elem.user_to_id).first())
                 people_id.append(elem.user_to_id)
-    print(people_id)
     return render_template('messages.html', base=get_base(), people=people)
 
 
@@ -203,14 +203,34 @@ def message_delete(id):
         abort(404)
 
 
-@app.route('/album/<album_id>')
-def album(album_id):
+@app.route('/photo/<photo_id>')
+@login_required
+def photo(photo_id):
     session = db_session.create_session()
-    album = session.query(Album).filter(Album.id == album_id).first()
-    photos = album.photos.split(', ')
-    return render_template('photos.html', base=get_base(), photos=photos, album=album)
+    photo = session.query(Photo).filter(Photo.id == photo_id).first()
+    if photo_id in current_user.albums:
+        # Проверка наналичие фотографии в фотографиях пользователя
+        # и последующем отображении кнопки удалить
+        user = True
+    else:
+        user = False
+    return render_template('photos.html', base=get_base(), photo=photo, user=user)
 
 
+@app.route('/photo_delete/<photo_id>')
+@login_required
+def photo_delete(photo_id):
+    session = db_session.create_session()
+    if photo_id in current_user.albums:
+        photo = session.query(Photo).filter(Photo.id == photo_id).first()
+        if photo:
+            session.delete(photo)
+            session.commit()
+            return redirect(f'/profile')
+    abort(404)
+
+
+@login_required
 @app.route('/add_friend/<int:user_id>', methods=['GET', 'POST'])
 def add_friend(user_id):
     if user_id != current_user.id:
@@ -232,6 +252,7 @@ def load_user(user_id):
     return session.query(User).get(user_id)
 
 
+@login_required
 @app.route('/settings', methods=["GET", "POST"])
 def settings():
     session = db_session.create_session()
@@ -283,7 +304,7 @@ def get_profile(user_id):
     form = ProfileForm()
     session = db_session.create_session()
     user = session.query(User).filter(User.id == user_id).first()
-    albums = session.query(Album).filter(Album.id.in_(user.albums.strip("'").split(', ')))
+    albums = session.query(Photo).filter(Photo.id.in_(user.albums.strip("'").split(', ')))
     form.albums = albums
     form.user = user
     friend = '' if user.friends is None else user.friends
@@ -297,6 +318,7 @@ def get_profile(user_id):
                            base=get_base())
 
 
+@login_required
 @app.route('/profile')
 def return_profile():
     return redirect(f'/profile/{current_user.id}')
@@ -367,6 +389,7 @@ def edit_news(id):
                            base=get_base())
 
 
+@login_required
 @app.route("/people", methods=["GET", "POST"])
 def get_people():
     form = UsersForm()
@@ -502,24 +525,45 @@ def reqister():
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Такой пользователь уже есть", base=get_base())
-        album = Album(
-            name=form.name.data + ' album',
+        photo = Photo(
+            name=form.name.data + ' photo',
             cover='/static/img/photos/sample_covers/{}.png'.format(
                 choice(['ololo', 'trollface', 'i_dont_now', 'aaaaa']))
         )
-        session.add(album)
+        session.add(photo)
         user = User(
             name=form.name.data,
             email=form.email.data,
             status=form.status.data,
-            albums=album.name,
-            friends=''
+            albums=photo.name,
+            friends='',
+            theme=1
         )
         user.set_password(form.password.data)
         session.add(user)
         session.commit()
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form, base=get_base())
+
+
+@app.route('/user_delete/<int:user_id>', methods=['GET', 'POST'])
+def user_delete(user_id):
+    session = db_session.create_session()
+    form = ProfileForm()
+    user = session.query(User).filter(User.id == user_id, user_id == current_user.id).first()
+    if request.method == "GET":
+        return render_template('user_delete.html', title='Удаление', form=form, base=get_base())
+    elif form.validate_on_submit():
+        if user.check_password(form.password.data):
+            if user:
+                session.delete(user)
+                session.commit()
+            else:
+                abort(404)
+        else:
+            return render_template('user_delete.html', title='Удаление', form=form, base=get_base(),
+                                   message='Пароль неверный')
+    return redirect('/logout')
 
 
 @app.route('/logout')
@@ -537,7 +581,8 @@ def index():
             (News.user == current_user) | (News.is_private != True))
     else:
         news = session.query(News).filter(News.is_private != True)
-    return render_template("index.html", news=news, title='Лента', base=get_base())
+    return render_template("index.html", news=news, title='Лента', base=get_base(),
+                               get_time=get_time)
 
 
 @app.route("/cookie_test")

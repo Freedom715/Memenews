@@ -24,7 +24,7 @@
                         <img src="{{item.image}}"
                              class="align-self-center mr-3 w-50"> <br>
                         {% endif %}
-                        Дата написания - {{item.created_date}}
+                        {{get_time(item.created_date.date(), item.created_date.time())}}
                     </p>
                     {% if current_user.is_authenticated and current_user == item.user %}
                     <div>

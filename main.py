@@ -94,10 +94,6 @@ class MemesForm(FlaskForm):
     name = choice_name()
 
 
-def create_app():
-    return app
-
-
 def get_base():
     base = BaseForm()
     if current_user.is_authenticated:
@@ -281,7 +277,6 @@ def settings():
         if background:
             f = background
             filename = secure_filename(f.filename)
-            print(filename)
             f.save("static/img/backgrounds/" + filename)
             user.background = url_for("static", filename=f"img/backgrounds/{filename}")
         if avatar:
@@ -293,10 +288,8 @@ def settings():
             user.avatar = url_for("static", filename=f"img/avatars/{filename}")
         if theme == "0":
             user.theme = False
-            print(user.theme)
         elif theme == "1":
             user.theme = True
-            print(user.theme)
         session.commit()
         return redirect(f'/profile/{current_user.id}')
 
@@ -313,7 +306,6 @@ def like_post(news_id):
         news.liked += 1
     elif news_id not in lst.split(', '):
         lst = lst.strip("'") + ', ' + news_id
-        print(lst)
         user.liked_news = user.liked_news.rstrip("'") + ', ' + str(news_id) + "'"
         news.liked += 1
     else:
@@ -379,9 +371,7 @@ def add_news():
         news.is_private = 0 if private is None else 1
         f = request.files.get("images")
         if f:
-            print(f)
             filename = secure_filename(f.filename)
-            print(filename)
             f.save("static/img/images/" + filename)
             news.image = url_for("static", filename=f"img/images/{filename}")
         session.add(news)
@@ -414,9 +404,7 @@ def edit_news(id):
             news.is_private = 0 if private is None else 1
             f = request.files.get("images")
             if f:
-                print(f)
                 filename = secure_filename(f.filename)
-                print(filename)
                 f.save("static/img/images/" + filename)
                 news.image = url_for("static", filename=f"img/images/{filename}")
             session.commit()
@@ -488,20 +476,15 @@ def neuro(neuroname):
             path[0] = url_for("static", filename=f"img/neuro/user/{filename}")
     if neuroname == 'meme':
         name = analyze_image_meme(path[0].lstrip('/'))
-        print(name)
         path[1] = url_for("static", filename=f"img/neuro/{name[0]}.jpg").lstrip("/")
         name = form.name + dct[str(name[0]).split()[0]]
     elif neuroname == 'lions':
         name = analyze_image_lion(path[0].lstrip('/'))
-        print(name)
         path[1] = url_for("static", filename=f"img/neuro/{name[0]}.jpg").lstrip("/")
         name = form.name + dct[str(name[0]).split()[0]]
-        print(name)
     elif neuroname == 'cat_dogs':
         name = analyze_image_dog(path[0].lstrip('/'))
-        print(name)
         name = form.name + dct[str(name[0]).split()[0]]
-        print(name)
         response = requests.get('https://api.thecatapi.com/v1/images/search')
         json_response = response.json()
         url = json_response[0]['url']
@@ -537,7 +520,6 @@ def login():
     if form.validate_on_submit():
         session = db_session.create_session()
         user = session.query(User).filter(User.email == form.email.data).first()
-        print(user)
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             return redirect("/")

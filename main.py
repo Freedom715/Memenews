@@ -204,7 +204,7 @@ def message_delete(id):
 
 
 @app.route('/album/<album_id>')
-def album(album_id):
+def get_album(album_id):
     session = db_session.create_session()
     album = session.query(Album).filter(Album.id == album_id).first()
     photos = album.photos.split(', ')
@@ -481,7 +481,7 @@ def login():
 
 
 @app.route('/register', methods=['GET', 'POST'])
-def reqister():
+def register():
     form = RegisterForm()
     if form.validate_on_submit():
         if not check_password(form.password.data):

@@ -299,22 +299,33 @@ def like_post(news_id):
     return redirect('/index')
 
 
+@app.route('/friend_delete/<friend_id>', methods=['GET', 'POST'])
+def friend_friend(friend_id):
+    session = db_session.create_session()
+    user = session.query(User).filter(User.id == current_user.id).first()
+    user_friends = user.friends.strip("'").split(", ")
+    user_friends = list(filter(lambda x: x != friend_id, user_friends))
+    user.friends = "'" + ', '.join(user_friends) + "'"
+    session.commit()
+    return redirect('/people')
+
+
 @app.route('/profile/<user_id>')
 def get_profile(user_id):
     form = ProfileForm()
     session = db_session.create_session()
     user = session.query(User).filter(User.id == user_id).first()
-    albums = session.query(Photo).filter(Photo.id.in_(user.albums.strip("'").split(', ')))
-    form.albums = albums
+    photo = session.query(Photo).filter(Photo.id.in_(user.albums.strip("'").split(', '))).all()
+    form.photo = photo[:6]
     form.user = user
     friend = '' if user.friends is None else user.friends
     if len(friend) > 0:
-        friends = session.query(User).filter(User.id.in_(friend.strip("'").split(', ')))
-        form.friends = friends
+        friends = session.query(User).filter(User.id.in_(friend.strip("'").split(', '))).all()
+        form.friends = friends[:8]
     else:
         form.friends = []
         form.error = 'Этот пользователь пока одинок. Напиши ему, может подружитесь.'
-    return render_template('profile.html', title='Профиль', form=form, albums=albums,
+    return render_template('profile.html', title='Профиль', form=form, photo=photo,
                            base=get_base())
 
 
@@ -396,13 +407,19 @@ def get_people():
     js = url_for("static", filename="js/bs-custom-file-input.js")
     session = db_session.create_session()
     users = session.query(User)
+    friends = session.query(User).filter(
+        User.id.in_(current_user.friends.strip("'").split(', '))).all()
+    friends = set(friends)
     find_string = request.form.get("find_string")
     if form.validate_on_submit():
         if form.find_string.data:
-            users = session.query(User).filter(User.name.like(f'%{find_string}%'))
+            users = session.query(User).filter(User.name.like(f'%{find_string}%')).all()
         else:
-            users = session.query(User)
+            users = session.query(User).all()
+    users = set(users)
+    users -= friends
     return render_template("people.html", form=form, users=users, title='Люди', base=get_base(),
+                           friends=friends,
                            js=js)
 
 
@@ -535,7 +552,7 @@ def reqister():
             name=form.name.data,
             email=form.email.data,
             status=form.status.data,
-            albums=photo.name,
+            albums="'" + photo.name + "'",
             friends='',
             theme=1
         )
@@ -556,7 +573,10 @@ def user_delete(user_id):
     elif form.validate_on_submit():
         if user.check_password(form.password.data):
             if user:
-                session.delete(user)
+                user.name = 'DELETE'
+                user.status = 'Удалён'
+                user.avatar = '/static/img/avatars/no_avatar.png'
+                user.albums = ''
                 session.commit()
             else:
                 abort(404)
@@ -582,7 +602,7 @@ def index():
     else:
         news = session.query(News).filter(News.is_private != True)
     return render_template("index.html", news=news, title='Лента', base=get_base(),
-                               get_time=get_time)
+                           get_time=get_time)
 
 
 @app.route("/cookie_test")

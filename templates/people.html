@@ -24,7 +24,27 @@
                 <h5 class="mt-1">Статус: {{item.status}}</h5>
                 {% if current_user.is_authenticated %}
                 <a href="/messages/{{ item.id }}" class="btn btn-warning">Сообщение</a>
+                {% if item.id != current_user.id %}
                 <a href="/add_friend/{{ item.id }}" class="btn btn-warning">Добавить в друзья</a>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+    {% for item in friends%}
+<div class="col-100">
+    <div class="block">
+        <div class="media">
+            <img src={{item.avatar}} class="align-self-start mr-3" alt={{item.name}} width="125"
+                 height="125">
+            <div class="media-body">
+                <h3 class="mt-0"><a href="/profile/{{ item.id }}"> {{item.name}} </a></h3>
+                <h5 class="mt-1">Статус: {{item.status}}</h5>
+                {% if current_user.is_authenticated %}
+                <a href="/messages/{{ item.id }}" class="btn btn-warning">Сообщение</a>
+                <a href="/friend_delete/{{ item.id }}" class="btn btn-secondary">Порвать отношения</a>
                 {% endif %}
             </div>
         </div>

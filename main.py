@@ -21,7 +21,7 @@ from data.albums import Photo
 from data.messages import Message
 from data.news import News
 from data.users import User
-from functions import check_password, get_time
+from functions import check_password, get_time, check_like
 
 app = Flask(__name__)
 api = Api(app)
@@ -105,6 +105,7 @@ def get_base():
         base.text_color = 'white' if not current_user.theme else 'black'
         base.back = '#0a0a0a' if not current_user.theme else '#f5f5f5'
         base.back_color = '#1e1e1e' if not current_user.theme else '#969696'
+        base.like_image = 'like(dark)' if not current_user.theme else 'like'
     else:
         base.background = ""
         base.text_color = 'black'
@@ -225,9 +226,16 @@ def photo_delete(photo_id):
         photo = session.query(Photo).filter(Photo.id == photo_id).first()
         if photo:
             session.delete(photo)
-            session.commit()
-            return redirect(f'/profile')
-    abort(404)
+        else:
+            abort(404)
+    else:
+        abort(404)
+    user = session.query(User).filter(User.id == current_user.id).first()
+    user_photo = user.albums.strip("'").split(", ")
+    user_photo = list(filter(lambda x: x != photo_id, user_photo))
+    user.albums = "'" + ', '.join(user_photo) + "'"
+    session.commit()
+    return redirect(f'/profile')
 
 
 @login_required
@@ -289,18 +297,37 @@ def settings():
         elif theme == "1":
             user.theme = True
             print(user.theme)
-
         session.commit()
         return redirect(f'/profile/{current_user.id}')
 
 
-@app.route('/like_post/<news_id>', methods=['POST'])
+@app.route('/like_post/<news_id>', methods=['GET', 'POST'])
 def like_post(news_id):
-    return redirect('/index')
+    session = db_session.create_session()
+    news = session.query(News).filter(News.id == news_id).first()
+    user = session.query(User).filter(User.id == current_user.id).first()
+    lst = user.liked_news
+    lst = lst.strip("'")
+    if user.liked_news == '':
+        user.liked_news = str(news_id)
+        news.liked += 1
+    elif news_id not in lst.split(', '):
+        lst = lst.strip("'") + ', ' + news_id
+        print(lst)
+        user.liked_news = user.liked_news.rstrip("'") + ', ' + str(news_id) + "'"
+        news.liked += 1
+    else:
+        user = session.query(User).filter(User.id == current_user.id).first()
+        user_liked_news = user.liked_news.strip("'").split(", ")
+        user_liked_news = list(filter(lambda x: x != news_id, user_liked_news))
+        user.liked_news = "'" + ', '.join(user_liked_news) + "'"
+        news.liked -= 1
+    session.commit()
+    return redirect('/')
 
 
 @app.route('/friend_delete/<friend_id>', methods=['GET', 'POST'])
-def friend_friend(friend_id):
+def friend_delete(friend_id):
     session = db_session.create_session()
     user = session.query(User).filter(User.id == current_user.id).first()
     user_friends = user.friends.strip("'").split(", ")
@@ -595,14 +622,17 @@ def logout():
 
 @app.route("/")
 def index():
+    lst=[]
     session = db_session.create_session()
     if current_user.is_authenticated:
         news = session.query(News).filter(
             (News.user == current_user) | (News.is_private != True))
+        lst = current_user.liked_news
+        lst = lst.strip("'").split(', ')
     else:
         news = session.query(News).filter(News.is_private != True)
     return render_template("index.html", news=news, title='Лента', base=get_base(),
-                           get_time=get_time)
+                           get_time=get_time, lst=lst, check_like=check_like)
 
 
 @app.route("/cookie_test")

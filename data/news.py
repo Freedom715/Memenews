@@ -20,4 +20,5 @@ class News(SqlAlchemyBase, SerializerMixin):
 
     user_id = sqlalchemy.Column(sqlalchemy.Integer,
                                 sqlalchemy.ForeignKey("users.id"))
+    liked = sqlalchemy.Column(sqlalchemy.Integer, nullable=False, default=0)
     user = orm.relation('User')

@@ -45,7 +45,7 @@
 <div class="col col-xl-5">
     <h2>Альбомы</h2>
     <ul>
-        {% for item in form.albums %}
+        {% for item in photo %}
         <li class="list-inline-item">
             <h3>{{item.name}}</h3>
             <a href="/photo/{{item.id}}">

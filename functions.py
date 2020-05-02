@@ -4,6 +4,11 @@ months = {1: "Января", 2: "Февраля", 3: "Марта", 4: "Апре�
           8: "Августа", 9: "Сентября", 10: "Октября", 11: "Ноября", 12: "Декабря"}
 
 
+def check_like(news_id, lst):
+    print(news_id, lst)
+    return '_put' if str(news_id) in lst else ''
+
+
 def check_password(password):
     print('Function!')
     if len(password) >= 8:

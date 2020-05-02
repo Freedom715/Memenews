@@ -9,6 +9,10 @@
     <label></label>
     {% for item in news[::-1]%}
     <div class="block">
+        {% if current_user == item.user %}
+        <a href="/news/{{ item.id }}" class="btn btn-warning">Изменить</a>
+        <a href="/news_delete/{{ item.id }}" class="btn btn-danger">Удалить</a>
+        {% endif %}
         <div class="col-md6 rounded">
             <div class="media">
                 <a href="/profile/{{item.user.id}}"> <img src="{{item.user.avatar}}"
@@ -26,10 +30,12 @@
                         {% endif %}
                         {{get_time(item.created_date.date(), item.created_date.time())}}
                     </p>
-                    {% if current_user.is_authenticated and current_user == item.user %}
+                    {% if current_user.is_authenticated %}
                     <div>
-                        <a href="/news/{{ item.id }}" class="btn btn-warning">Изменить</a>
-                        <a href="/news_delete/{{ item.id }}" class="btn btn-danger">Удалить</a>
+                        <a href="/like_post/{{ item.id }}"> <img
+                                src="/static/img/images/{{ base.like_image }}{{ check_like(item.id, lst) }}.png"
+                                width="100" height="100"></a>
+                        <p>Одобрили {{item.liked}} человек</p>
                     </div>
                     {% endif %}
                 </div>

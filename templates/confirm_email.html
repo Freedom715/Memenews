@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="col-md-8">
+    <h1>Подтверждение электронной почты</h1>
+    <form action="" method="post">
+        <h5>На указанную почту было отправлено письмо с кодом, введите код в
+        поле ниже для продолжения регистрации</h5>
+        {{ form.key.label }}<br>
+        {{ form.key(class="form-control") }}<br>
+        {{ form.submit_email(type="submit", class="btn btn-primary") }}
+        {% if message %}
+        <p>{{message}}</p>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}

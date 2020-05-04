@@ -154,7 +154,12 @@ def add_photo():
                 photo.photos = ""
             session.add(photo)
             user = session.query(User).filter(User.id == current_user.id).first()
-            user.photos = user.photos.rstrip("'") + ", " + str(photo.id) + "'"
+            if ", " not in user.photos and current_user.photos == "":
+                user.photos = "'" + str(photo.id) + "'"
+            elif ", " not in user.photos and current_user.photos != "":
+                user.photos = "'" + user.photos.strip("'") + ", " + str(photo.id) + "'"
+            else:
+                user.photos = user.photos.rstrip("'") + ", " + str(photo.id) + "'"
             session.commit()
             return redirect("/")
     return render_template("add_photo.html", title="Добавление фото", form=form, base=get_base())
@@ -323,7 +328,12 @@ def like_post(news_id):
         news.liked += 1
     elif news_id not in lst.split(", "):
         lst = lst.strip("'") + ", " + news_id
-        user.liked_news = user.liked_news.rstrip("'") + ", " + str(news_id) + "'"
+        if ", " not in user.liked_news and current_user.liked_news == "":
+            user.liked_news = "'" + str(news_id) + "'"
+        elif ", " not in user.liked_news and current_user.liked_news != "":
+            user.liked_news = "'" + user.liked_news.strip("'") + ", " + str(news_id) + "'"
+        else:
+            user.liked_news = user.liked_news.rstrip("'") + ", " + str(news_id) + "'"
         news.liked += 1
     else:
         user = session.query(User).filter(User.id == current_user.id).first()
@@ -710,4 +720,4 @@ def test():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="127.0.0.1")

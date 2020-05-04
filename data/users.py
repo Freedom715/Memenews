@@ -24,11 +24,11 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     friends = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     avatar = sqlalchemy.Column(sqlalchemy.String,
                                default='/static/img/avatars/no_avatar.png')
-    liked_news = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=True)
+    liked_news = sqlalchemy.Column(sqlalchemy.String, nullable=True, default='')
     liked_photos = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=True)
     background = sqlalchemy.Column(sqlalchemy.String, default='/static/img/backgrounds/fon2.png')
     theme = sqlalchemy.Column(sqlalchemy.Boolean, default=1)
-    photos = sqlalchemy.Column(sqlalchemy.VARCHAR)
+    photos = sqlalchemy.Column(sqlalchemy.String, default='')
 
     def __repr__(self):
         return f"<User> {self.id} {self.name} {self.email}"

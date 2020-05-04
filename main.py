@@ -1,10 +1,12 @@
 import datetime
 import os
-from random import choice
+from random import choice, randint
 
 import requests
 from flask import Flask, render_template, redirect, request, make_response, session, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask_mail import Mail
+from flask_mail import Message as FlaskMessage
 from flask_restful import Api
 from flask_wtf import FlaskForm
 from sqlalchemy import or_
@@ -17,7 +19,7 @@ from wtforms.validators import DataRequired
 import news_resources
 from analize import analyze_image_meme, analyze_image_dog, analyze_image_lion
 from data import db_session
-from data.albums import Photo
+from data.photos import Photo
 from data.messages import Message
 from data.news import News
 from data.users import User
@@ -25,69 +27,80 @@ from functions import check_password, get_time, check_like
 
 app = Flask(__name__)
 api = Api(app)
-app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
-app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=365)
+app.config["SECRET_KEY"] = "yandexlyceum_secret_key"
+app.config["PERMANENT_SESSION_LIFETIME"] = datetime.timedelta(days=365)
+app.config["SECRET_KEY"] = "yandexlyceum_secret_key"
+app.config["MAIL_SERVER"] = "smtp.yandex.ru"
+app.config["MAIL_PORT"] = 465
+app.config["MAIL_USE_SSL"] = True
+app.config["MAIL_USERNAME"] = "m3menews@yandex.ru"
+app.config["MAIL_DEFAULT_SENDER"] = "m3menews@yandex.ru"
+app.config["MAIL_PASSWORD"] = "1234567890Memenews"
+mail = Mail(app)
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 db_session.global_init("db/Memenews.sqlite")
 # app.register_blueprint(news_api.blueprint)
-api.add_resource(news_resources.NewsListResource, '/api/v2/news')
-api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
+api.add_resource(news_resources.NewsListResource, "/api/v2/news")
+api.add_resource(news_resources.NewsResource, "/api/v2/news/<int:news_id>")
 
 
 class BaseForm(FlaskForm):
     background = ""
-    text_color = 'white'
-    back = '#0a0a0a'
-    back_color = '#646464'
+    text_color = "white"
+    back = "#0a0a0a"
+    back_color = "#646464"
     font_white = "white"
     js_for_files = ""
 
 
 class RegisterForm(FlaskForm):
-    email = EmailField('Почта', validators=[DataRequired()])
-    password = PasswordField('Пароль', validators=[DataRequired()])
-    password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
-    name = StringField('Имя пользователя', validators=[DataRequired()])
+    email = EmailField("Почта")
+    password = PasswordField("Пароль")
+    password_again = PasswordField("Повторите пароль")
+    name = StringField("Имя пользователя")
     status = TextAreaField("Немного о себе")
-    submit = SubmitField('Войти')
+    submit = SubmitField("Отправить проверочное сообщение на указанную почту")
+    submit_email = SubmitField("Подтвердить")
+    key = StringField("Имя пользователя")
 
 
 class LoginForm(FlaskForm):
-    email = EmailField('Почта', validators=[DataRequired()])
-    password = PasswordField('Пароль', validators=[DataRequired()])
-    remember_me = BooleanField('Запомнить меня')
-    submit = SubmitField('Войти')
+    email = EmailField("Почта", validators=[DataRequired()])
+    password = PasswordField("Пароль", validators=[DataRequired()])
+    remember_me = BooleanField("Запомнить меня")
+    submit = SubmitField("Войти")
 
 
 class NewsForm(FlaskForm):
-    title = 'Заголовок'
+    title = "Заголовок"
     content = "Содержание"
     is_private = "Личное"
-    submit = 'Применить'
+    submit = "Применить"
 
 
 class ProfileForm(FlaskForm):
-    name = 'User'
+    name = "User"
     user = current_user
     cur_user = current_user
     friends = [current_user]
-    error = ''
-    password = PasswordField('Пароль', validators=[DataRequired()])
+    error = ""
+    password = PasswordField("Пароль", validators=[DataRequired()])
 
 
 class UsersForm(FlaskForm):
-    find_string = StringField('Поиск людей')
-    submit = SubmitField('Найти')
+    find_string = StringField("Поиск людей")
+    submit = SubmitField("Найти")
 
 
 def choice_name():
     return choice(
-        ['Хм... Наша нейросеть предполагает что на этой фотографии ',
-         'Похоже, что на этом фото ',
+        ["Хм... Наша нейросеть предполагает что на этой фотографии ",
+         "Похоже, что на этом фото ",
          "По мнению нейросети на этой картинке "])
-    # 'Мы и подумать не могли что существует вещь похожая на '])
-    # 'Очень малый процент людей похожи на '])
+    # "Мы и подумать не могли что существует вещь похожая на "])
+    # "Очень малый процент людей похожи на "])
 
 
 class MemesForm(FlaskForm):
@@ -98,25 +111,29 @@ def get_base():
     base = BaseForm()
     if current_user.is_authenticated:
         base.background = current_user.background
-        base.text_color = 'white' if not current_user.theme else 'black'
-        base.back = '#0a0a0a' if not current_user.theme else '#f5f5f5'
-        base.back_color = '#1e1e1e' if not current_user.theme else '#969696'
-        base.like_image = 'like(dark)' if not current_user.theme else 'like'
+        base.text_color = "white" if not current_user.theme else "black"
+        base.back = "#0a0a0a" if not current_user.theme else "#f5f5f5"
+        base.back_color = "#1e1e1e" if not current_user.theme else "#969696"
+        base.like_image = "like(dark)" if not current_user.theme else "like"
     else:
         base.background = ""
-        base.text_color = 'black'
-        base.back = '#0a0a0a'
-        base.back_color = '#969696'
-    base.js_for_files = url_for("static", filename="js/bs-custom-file-input.js")
+        base.text_color = "black"
+        base.back = "#0a0a0a"
+        base.back_color = "#969696"
+    base.js_for_files = url_for("static", filename="/js/bs-custom-file-input.js")
     return base
 
 
-@app.route('/add_photo', methods=['GET', 'POST'])
+def create_app():
+    return app
+
+
+@app.route("/add_photo", methods=["GET", "POST"])
 @login_required
 def add_photo():
     form = NewsForm()
     if request.method == "GET":
-        return render_template('add_photo.html', title='Добавление фото', form=form,
+        return render_template("add_photo.html", title="Добавление фото", form=form,
                                base=get_base())
     elif request.method == "POST":
         if form.validate_on_submit():
@@ -132,18 +149,18 @@ def add_photo():
                 photo.cover = url_for("static", filename=f"img/photos/covers/{filename}")
                 photo.photos = url_for("static", filename=f"img/photos/covers/{filename}")
             else:
-                photo.cover = '/static/img/photos/sample_covers/{}.png'.format(
-                    choice(['ololo', 'trollface', 'i_dont_now', 'aaaaa']))
-                photo.photos = ''
+                photo.cover = "/static/img/photos/sample_covers/{}.png".format(
+                    choice(["ololo", "trollface", "i_dont_now", "aaaaa"]))
+                photo.photos = ""
             session.add(photo)
             user = session.query(User).filter(User.id == current_user.id).first()
-            user.albums = user.albums.rstrip("'") + ', ' + str(photo.id) + "'"
+            user.photos = user.photos.rstrip("'") + ", " + str(photo.id) + "'"
             session.commit()
-            return redirect('/')
-    return render_template('add_photo.html', title='Добавление фото', form=form, base=get_base())
+            return redirect("/")
+    return render_template("add_photo.html", title="Добавление фото", form=form, base=get_base())
 
 
-@app.route('/messages/<user_id>', methods=['GET', 'POST'])
+@app.route("/messages/<user_id>", methods=["GET", "POST"])
 @login_required
 def messenger(user_id):
     session = db_session.create_session()
@@ -151,7 +168,7 @@ def messenger(user_id):
     if request.method == "GET":
         messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
                                                      Message.user_to_id == current_user.id))
-        return render_template('messenger.html', base=get_base(), messages=messages, user_to=user_to,
+        return render_template("messenger.html", base=get_base(), messages=messages, user_to=user_to,
                                get_time=get_time)
     elif request.method == "POST":
         messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
@@ -163,11 +180,11 @@ def messenger(user_id):
         message.user_to_id = session.query(User).filter(User.id == user_id).first().id
         session.add(message)
         session.commit()
-        return render_template('messenger.html', base=get_base(), messages=messages, user_to=user_to,
+        return render_template("messenger.html", base=get_base(), messages=messages, user_to=user_to,
                                get_time=get_time)
 
 
-@app.route('/messages')
+@app.route("/messages")
 @login_required
 def messages():
     session = db_session.create_session()
@@ -183,10 +200,10 @@ def messages():
             else:
                 people.append(session.query(User).filter(User.id == elem.user_to_id).first())
                 people_id.append(elem.user_to_id)
-    return render_template('messages.html', base=get_base(), people=people)
+    return render_template("messages.html", base=get_base(), people=people)
 
 
-@app.route('/message_delete/<id>', methods=['GET', 'POST'])
+@app.route("/message_delete/<id>", methods=["GET", "POST"])
 @login_required
 def message_delete(id):
     session = db_session.create_session()
@@ -195,30 +212,30 @@ def message_delete(id):
     if message:
         session.delete(message)
         session.commit()
-        return redirect(f'/messages/{message.user_to_id}')
+        return redirect(f"/messages/{message.user_to_id}")
     else:
         abort(404)
 
 
-@app.route('/photo/<photo_id>')
+@app.route("/photo/<photo_id>")
 @login_required
 def photo(photo_id):
     session = db_session.create_session()
     photo = session.query(Photo).filter(Photo.id == photo_id).first()
-    if photo_id in current_user.albums:
+    if photo_id in current_user.photos:
         # Проверка наналичие фотографии в фотографиях пользователя
         # и последующем отображении кнопки удалить
         user = True
     else:
         user = False
-    return render_template('photos.html', base=get_base(), photo=photo, user=user)
+    return render_template("photos.html", base=get_base(), photo=photo, user=user)
 
 
-@app.route('/photo_delete/<photo_id>')
+@app.route("/photo_delete/<photo_id>")
 @login_required
 def photo_delete(photo_id):
     session = db_session.create_session()
-    if photo_id in current_user.albums:
+    if photo_id in current_user.photos:
         photo = session.query(Photo).filter(Photo.id == photo_id).first()
         if photo:
             session.delete(photo)
@@ -227,27 +244,27 @@ def photo_delete(photo_id):
     else:
         abort(404)
     user = session.query(User).filter(User.id == current_user.id).first()
-    user_photo = user.albums.strip("'").split(", ")
+    user_photo = user.photos.strip("'").split(", ")
     user_photo = list(filter(lambda x: x != photo_id, user_photo))
-    user.albums = "'" + ', '.join(user_photo) + "'"
+    user.photos = "'" + ", ".join(user_photo) + "'"
     session.commit()
-    return redirect(f'/profile')
+    return redirect(f"/profile")
 
 
 @login_required
-@app.route('/add_friend/<int:user_id>', methods=['GET', 'POST'])
+@app.route("/add_friend/<int:user_id>", methods=["GET", "POST"])
 def add_friend(user_id):
     if user_id != current_user.id:
         session = db_session.create_session()
         user = session.query(User).filter(User.id == current_user.id).first()
-        if ', ' not in user.friends and current_user.friends == '':
+        if ", " not in user.friends and current_user.friends == "":
             user.friends = "'" + str(user_id) + "'"
-        elif ', ' not in user.friends and current_user.friends != '':
-            user.friends = "'" + user.friends.strip("'") + ', ' + str(user_id) + "'"
+        elif ", " not in user.friends and current_user.friends != "":
+            user.friends = "'" + user.friends.strip("'") + ", " + str(user_id) + "'"
         else:
-            user.friends = user.friends[:-1] + ', ' + str(user_id) + "'"
+            user.friends = user.friends[:-1] + ", " + str(user_id) + "'"
         session.commit()
-    return redirect(f'/profile/{user_id}')
+    return redirect(f"/profile/{user_id}")
 
 
 @login_manager.user_loader
@@ -257,12 +274,12 @@ def load_user(user_id):
 
 
 @login_required
-@app.route('/settings', methods=["GET", "POST"])
+@app.route("/settings", methods=["GET", "POST"])
 def settings():
     session = db_session.create_session()
     user = session.query(User).filter(User.id == current_user.id).first()
     if request.method == "GET":
-        return render_template('settings.html', title='Параметры', base=get_base(),
+        return render_template("settings.html", title="Параметры", base=get_base(),
                                user=user)
     elif request.method == "POST":
         avatar = request.files.get("avatar")
@@ -291,75 +308,79 @@ def settings():
         elif theme == "1":
             user.theme = True
         session.commit()
-        return redirect(f'/profile/{current_user.id}')
+        return redirect(f"/profile/{current_user.id}")
 
 
-@app.route('/like_post/<news_id>', methods=['GET', 'POST'])
+@app.route("/like_post/<news_id>", methods=["GET", "POST"])
 def like_post(news_id):
     session = db_session.create_session()
     news = session.query(News).filter(News.id == news_id).first()
     user = session.query(User).filter(User.id == current_user.id).first()
     lst = user.liked_news
     lst = lst.strip("'")
-    if user.liked_news == '':
+    if user.liked_news == "":
         user.liked_news = str(news_id)
         news.liked += 1
-    elif news_id not in lst.split(', '):
-        lst = lst.strip("'") + ', ' + news_id
-        user.liked_news = user.liked_news.rstrip("'") + ', ' + str(news_id) + "'"
+    elif news_id not in lst.split(", "):
+        lst = lst.strip("'") + ", " + news_id
+        user.liked_news = user.liked_news.rstrip("'") + ", " + str(news_id) + "'"
         news.liked += 1
     else:
         user = session.query(User).filter(User.id == current_user.id).first()
         user_liked_news = user.liked_news.strip("'").split(", ")
         user_liked_news = list(filter(lambda x: x != news_id, user_liked_news))
-        user.liked_news = "'" + ', '.join(user_liked_news) + "'"
+        user.liked_news = "'" + ", ".join(user_liked_news) + "'"
         news.liked -= 1
     session.commit()
-    return redirect('/')
+    return redirect("/")
 
 
-@app.route('/friend_delete/<friend_id>', methods=['GET', 'POST'])
+@app.route("/friend_delete/<friend_id>", methods=["GET", "POST"])
 def friend_delete(friend_id):
     session = db_session.create_session()
     user = session.query(User).filter(User.id == current_user.id).first()
     user_friends = user.friends.strip("'").split(", ")
     user_friends = list(filter(lambda x: x != friend_id, user_friends))
-    user.friends = "'" + ', '.join(user_friends) + "'"
+    user.friends = "'" + ", ".join(user_friends) + "'"
     session.commit()
-    return redirect('/people')
+    return redirect("/people")
 
 
-@app.route('/profile/<user_id>')
+@app.route("/profile/<user_id>")
 def get_profile(user_id):
     form = ProfileForm()
     session = db_session.create_session()
     user = session.query(User).filter(User.id == user_id).first()
-    photo = session.query(Photo).filter(Photo.id.in_(user.albums.strip("'").split(', '))).all()
-    form.photo = photo[:6]
-    form.user = user
-    friend = '' if user.friends is None else user.friends
+    if user.photos:
+        photo = session.query(Photo).filter(Photo.id.in_(user.photos.strip("'").split(", "))).all()
+        form.photo = photo[:6]
+        form.user = user
+    else:
+        photo = ""
+        form.photo = ""
+    friend = "" if user.friends is None else user.friends
     if len(friend) > 0:
-        friends = session.query(User).filter(User.id.in_(friend.strip("'").split(', '))).all()
+        friends = session.query(User).filter(User.id.in_(friend.strip("'").split(", "))).all()
         form.friends = friends[:8]
     else:
         form.friends = []
-        form.error = 'Этот пользователь пока одинок. Напиши ему, может подружитесь.'
-    return render_template('profile.html', title='Профиль', form=form, photo=photo,
+        form.error = "Этот пользователь пока одинок. Напиши ему, может подружитесь."
+    return render_template("profile.html", title="Профиль", form=form, photo=photo,
                            base=get_base())
 
 
 @login_required
-@app.route('/profile')
+@app.route("/profile")
 def return_profile():
-    return redirect(f'/profile/{current_user.id}')
+    return redirect(f"/profile/{current_user.id}")
 
 
-@app.route('/news', methods=['GET', 'POST'])
+@app.route("/news", methods=["GET", "POST"])
 @login_required
 def add_news():
     form = NewsForm()
     if request.method == "GET":
-        return render_template('add_post.html', title='Добавление новости',
+        return render_template("add_post.html", title="Добавление новости",
                                form=form, base=get_base())
     elif request.method == "POST":
         session = db_session.create_session()
@@ -376,10 +397,10 @@ def add_news():
             news.image = url_for("static", filename=f"img/images/{filename}")
         session.add(news)
         session.commit()
-        return redirect('/')
+        return redirect("/")
 
 
-@app.route('/news/<int:id>', methods=['GET', 'POST'])
+@app.route("/news/<int:id>", methods=["GET", "POST"])
 @login_required
 def edit_news(id):
     form = NewsForm()
@@ -408,10 +429,10 @@ def edit_news(id):
                 f.save("static/img/images/" + filename)
                 news.image = url_for("static", filename=f"img/images/{filename}")
             session.commit()
-            return redirect('/')
+            return redirect("/")
         else:
             abort(404)
-    return render_template('add_post.html', title='Редактирование новости', form=form,
+    return render_template("add_post.html", title="Редактирование новости", form=form,
                            base=get_base())
 
 
@@ -423,48 +444,48 @@ def get_people():
     session = db_session.create_session()
     users = session.query(User)
     friends = session.query(User).filter(
-        User.id.in_(current_user.friends.strip("'").split(', '))).all()
+        User.id.in_(current_user.friends.strip("'").split(", "))).all()
     friends = set(friends)
     find_string = request.form.get("find_string")
     if form.validate_on_submit():
         if form.find_string.data:
-            users = session.query(User).filter(User.name.like(f'%{find_string}%')).all()
+            users = session.query(User).filter(User.name.like(f"%{find_string}%")).all()
         else:
             users = session.query(User).all()
     users = set(users)
     users -= friends
-    return render_template("people.html", form=form, users=users, title='Люди', base=get_base(),
+    return render_template("people.html", form=form, users=users, title="Люди", base=get_base(),
                            friends=friends,
                            js=js)
 
 
-@app.route('/neuro/<neuroname>', methods=['GET', 'POST'])
+@app.route("/neuro/<neuroname>", methods=["GET", "POST"])
 @login_required
 def neuro(neuroname):
-    dct = {'Abyssinian': 'Абиссинский кот', 'Bengal': 'Бенгальский кот',
-           'Birman': 'Бирманская кошка', 'Bombay': 'Бомбей',
-           'British_Shorthair': 'Британская Короткошерстная Кошка',
-           'Egyptian_Mau': 'Египетский Мау', 'Maine_Coon': 'Мейн-кун',
-           'Persian': 'Персидский кот', 'Ragdoll': 'Рэгдолл', 'Russian_Blue': 'Русская Голубая',
-           'Siamese': 'Сиамская кошка', 'Sphynx': 'Сфинкс',
-           'american_bulldog': 'американский бульдог',
-           'american_pit_bull_terrier': 'американский питбультерьер', 'basset_hound': 'Бассет',
-           'beagle': 'Бигль', 'boxer': 'боксер', 'chihuahua': 'чихуахуа',
-           'english_cocker_spaniel': 'английский кокер-спаниель',
-           'english_setter': 'английский сеттер', 'german_shorthaired': 'немецкий курцхаар',
-           'great_pyrenees': 'Пиренейская горная собака', 'havanese': 'Гаванский бишон',
-           'japanese_chin': 'Японский Хин', 'keeshond': 'Кеесхонд', 'leonberger': 'Леонбергер',
-           'miniature_pinscher': 'Миниатюрный пинчер',
-           'newfoundland': 'Ньюфауленд', 'pomeranian': 'Померанский шпиц',
-           'pug': 'Мопс', 'saint_bernard': 'Сенбернар', 'samoyed': 'Саемод',
-           'scottish_terrier': 'Шотландский терьер', 'shiba_inu': 'Сиба-Ину',
-           'staffordshire_bull_terrier': 'Стаффордширский бультерьер',
-           'wheaten_terrier': 'Ирландский мягкошёрстный пшеничный терьер',
-           'yorkshire_terrier': 'Йоркширский терьер', 'bom_bom': 'Дед Бом-бом',
-           'bushemi': 'Стив Бушеми и его глаза', 'goblin': 'Дмитрий (Гоблин) Пучков',
-           'leopard': 'Леопард', 'lion': 'Лев', 'people': 'обычный человек',
-           'pepe': 'лягушонок Пепе', 'sheldon': 'Шелдон Купер (Теория Большого взрыва)',
-           'tiger': 'Тигр', 'yoda': 'малыш Йода (Мандалорец)'}
+    dct = {"Abyssinian": "Абиссинский кот", "Bengal": "Бенгальский кот",
+           "Birman": "Бирманская кошка", "Bombay": "Бомбей",
+           "British_Shorthair": "Британская Короткошерстная Кошка",
+           "Egyptian_Mau": "Египетский Мау", "Maine_Coon": "Мейн-кун",
+           "Persian": "Персидский кот", "Ragdoll": "Рэгдолл", "Russian_Blue": "Русская Голубая",
+           "Siamese": "Сиамская кошка", "Sphynx": "Сфинкс",
+           "american_bulldog": "американский бульдог",
+           "american_pit_bull_terrier": "американский питбультерьер", "basset_hound": "Бассет",
+           "beagle": "Бигль", "boxer": "боксер", "chihuahua": "чихуахуа",
+           "english_cocker_spaniel": "английский кокер-спаниель",
+           "english_setter": "английский сеттер", "german_shorthaired": "немецкий курцхаар",
+           "great_pyrenees": "Пиренейская горная собака", "havanese": "Гаванский бишон",
+           "japanese_chin": "Японский Хин", "keeshond": "Кеесхонд", "leonberger": "Леонбергер",
+           "miniature_pinscher": "Миниатюрный пинчер",
+           "newfoundland": "Ньюфауленд", "pomeranian": "Померанский шпиц",
+           "pug": "Мопс", "saint_bernard": "Сенбернар", "samoyed": "Саемод",
+           "scottish_terrier": "Шотландский терьер", "shiba_inu": "Сиба-Ину",
+           "staffordshire_bull_terrier": "Стаффордширский бультерьер",
+           "wheaten_terrier": "Ирландский мягкошёрстный пшеничный терьер",
+           "yorkshire_terrier": "Йоркширский терьер", "bom_bom": "Дед Бом-бом",
+           "bushemi": "Стив Бушеми и его глаза", "goblin": "Дмитрий (Гоблин) Пучков",
+           "leopard": "Леопард", "lion": "Лев", "people": "обычный человек",
+           "pepe": "лягушонок Пепе", "sheldon": "Шелдон Купер (Теория Большого взрыва)",
+           "tiger": "Тигр", "yoda": "малыш Йода (Мандалорец)"}
     form = MemesForm()
     path = ["static/img/neuro/pepe.jpg", "static/img/neuro/pepe.jpg"]
     if form.validate_on_submit():
@@ -474,33 +495,33 @@ def neuro(neuroname):
             filepath = "static/img/neuro/user/" + filename
             f.save(filepath)
             path[0] = url_for("static", filename=f"img/neuro/user/{filename}")
-    if neuroname == 'meme':
-        name = analyze_image_meme(path[0].lstrip('/'))
+    if neuroname == "meme":
+        name = analyze_image_meme(path[0].lstrip("/"))
         path[1] = url_for("static", filename=f"img/neuro/{name[0]}.jpg").lstrip("/")
         name = form.name + dct[str(name[0]).split()[0]]
-    elif neuroname == 'lions':
-        name = analyze_image_lion(path[0].lstrip('/'))
+    elif neuroname == "lions":
+        name = analyze_image_lion(path[0].lstrip("/"))
         path[1] = url_for("static", filename=f"img/neuro/{name[0]}.jpg").lstrip("/")
         name = form.name + dct[str(name[0]).split()[0]]
-    elif neuroname == 'cat_dogs':
-        name = analyze_image_dog(path[0].lstrip('/'))
+    elif neuroname == "cat_dogs":
+        name = analyze_image_dog(path[0].lstrip("/"))
         name = form.name + dct[str(name[0]).split()[0]]
-        response = requests.get('https://api.thecatapi.com/v1/images/search')
+        response = requests.get("https://api.thecatapi.com/v1/images/search")
         json_response = response.json()
-        url = json_response[0]['url']
+        url = json_response[0]["url"]
         response = requests.get(url)
-        os.remove('static/img/neuro/user/tmpcat.jpg')
+        os.remove("static/img/neuro/user/tmpcat.jpg")
         f = open("static/img/neuro/user/tmpcat.jpg", "wb")
         f.write(response.content)
         f.close()
         path[1] = "static/img/neuro/user/tmpcat.jpg"
-    fact = ''
-    path = [('/' + i) if not (i.startswith("/")) else i for i in path]
-    return render_template("neuro.html", title='Нейросети', base=get_base(), path=path, form=form,
+    fact = ""
+    path = [("/" + i) if not (i.startswith("/")) else i for i in path]
+    return render_template("neuro.html", title="Нейросети", base=get_base(), path=path, form=form,
                            name=name, fact=fact)
 
 
-@app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
+@app.route("/news_delete/<int:id>", methods=["GET", "POST"])
 @login_required
 def news_delete(id):
     session = db_session.create_session()
@@ -511,10 +532,10 @@ def news_delete(id):
         session.commit()
     else:
         abort(404)
-    return redirect('/')
+    return redirect("/")
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -523,79 +544,117 @@ def login():
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             return redirect("/")
-        return render_template('login.html',
+        return render_template("login.html",
                                message="Неправильный логин или пароль",
                                form=form, base=get_base())
-    return render_template('login.html', title='Авторизация', form=form, base=get_base())
+    return render_template("login.html", title="Авторизация", form=form, base=get_base())
 
 
-@app.route('/register', methods=['GET', 'POST'])
-def reqister():
+email_confirmation = False
+name = ""
+email = ""
+status = ""
+key = ""
+password = ""
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    global email_confirmation, name, email, status, key, password
     form = RegisterForm()
-    if form.validate_on_submit():
+    session = db_session.create_session()
+    if form.validate_on_submit() and not email_confirmation:
         if not check_password(form.password.data):
             if form.password.data != form.password_again.data:
-                return render_template('register.html', title='Регистрация',
+                return render_template("register.html", title="Регистрация",
                                        form=form,
                                        message="Пароли не совпадают", base=get_base())
         else:
-            return render_template('register.html', title='Регистрация',
+            return render_template("register.html", title="Регистрация",
                                    form=form,
                                    message=check_password(form.password.data), base=get_base())
-        session = db_session.create_session()
+
         if session.query(User).filter(User.email == form.email.data).first():
-            return render_template('register.html', title='Регистрация',
+            return render_template("register.html", title="Регистрация",
                                    form=form,
                                    message="Такой пользователь уже есть", base=get_base())
         if session.query(User).filter(User.name == form.name.data).first():
-            return render_template('register.html', title='Регистрация',
+            return render_template("register.html", title="Регистрация",
                                    form=form,
                                    message="Такой пользователь уже есть", base=get_base())
-        photo = Photo(
-            name=form.name.data + ' photo',
-            cover='/static/img/photos/sample_covers/{}.png'.format(
-                choice(['ololo', 'trollface', 'i_dont_now', 'aaaaa']))
-        )
-        session.add(photo)
-        user = User(
-            name=form.name.data,
-            email=form.email.data,
-            status=form.status.data,
-            albums="'" + photo.name + "'",
-            friends='',
-            theme=1
-        )
-        user.set_password(form.password.data)
-        session.add(user)
-        session.commit()
-        return redirect('/login')
-    return render_template('register.html', title='Регистрация', form=form, base=get_base())
+        if not form.email.data:
+            return render_template("register.html", title="Регистрация",
+                                   form=form,
+                                   message="Введите электронную почту", base=get_base())
+        if not form.name.data:
+            return render_template("register.html", title="Регистрация",
+                                   form=form,
+                                   message="Введите имя пользователя", base=get_base())
+        email_confirmation = True
+        name = form.name.data
+        email = form.email.data
+        password = form.password.data
+        print("ok")
+        status = form.status.data
+        key = randint(100000, 999999)
+        try:
+            msg = FlaskMessage("Memenews", recipients=[email])
+            msg.html = f"<h2>Код для регистрации на проекте Memenews</h2>\n<p>{key}</p>"
+            mail.send(msg)
+        except:
+            return render_template("register.html", title="Регистрация",
+                                   form=form,
+                                   message="Произошла неизвестная ошибка, связанная с электронной почтой, <br>"
+                                           "проверьте адрес эл. почты или отправьте запрос позже", base=get_base())
+        return render_template("confirm_email.html", title="Регистрация", form=form, base=get_base(),
+                               message="")
+    elif email_confirmation:
+        if str(form.key.data) == str(key):
+            user = User(
+                name=name,
+                email=email,
+                status=status,
+                friends="",
+                theme=1,
+                liked_news=""
+            )
+            user.set_password(password)
+            session.add(user)
+            session.commit()
+            email_confirmation = False
+            print("ok")
+            return redirect("/login")
+        else:
+            return render_template("confirm_email.html", title="Регистрация", form=form, base=get_base(),
+                                   message="Коды не совпадают")
+    else:
+        return render_template("register.html", title="Регистрация", form=form, base=get_base())
 
 
-@app.route('/user_delete/<int:user_id>', methods=['GET', 'POST'])
+@app.route("/user_delete/<int:user_id>", methods=["GET", "POST"])
 def user_delete(user_id):
     session = db_session.create_session()
     form = ProfileForm()
     user = session.query(User).filter(User.id == user_id, user_id == current_user.id).first()
     if request.method == "GET":
-        return render_template('user_delete.html', title='Удаление', form=form, base=get_base())
+        return render_template("user_delete.html", title="Удаление", form=form, base=get_base())
     elif form.validate_on_submit():
         if user.check_password(form.password.data):
             if user:
-                user.name = 'DELETE'
-                user.status = 'Удалён'
-                user.avatar = '/static/img/avatars/no_avatar.png'
-                user.albums = ''
+                user.name = "DELETE"
+                user.status = "Удалён"
+                user.avatar = "/static/img/avatars/no_avatar.png"
+                user.photos = ""
                 session.commit()
             else:
                 abort(404)
         else:
-            return render_template('user_delete.html', title='Удаление', form=form, base=get_base(),
-                                   message='Пароль неверный')
-    return redirect('/logout')
+            return render_template("user_delete.html", title="Удаление", form=form, base=get_base(),
+                                   message="Пароль неверный")
+    return redirect("/logout")
 
 
-@app.route('/logout')
+@app.route("/logout")
 @login_required
 def logout():
     logout_user()
@@ -604,16 +663,16 @@ def logout():
 
 @app.route("/")
 def index():
-    lst=[]
+    lst = []
     session = db_session.create_session()
     if current_user.is_authenticated:
         news = session.query(News).filter(
             (News.user == current_user) | (News.is_private != True))
         lst = current_user.liked_news
-        lst = lst.strip("'").split(', ')
+        lst = lst.strip("'").split(", ")
     else:
         news = session.query(News).filter(News.is_private != True)
-    return render_template("index.html", news=news, title='Лента', base=get_base(),
+    return render_template("index.html", news=news, title="Лента", base=get_base(),
                            get_time=get_time, lst=lst, check_like=check_like)
 
 
@@ -627,23 +686,28 @@ def cookie_test():
     else:
         res = make_response(
             "Вы пришли на эту страницу в первый раз за последние 2 года")
-        res.set_cookie("visits_count", '1',
+        res.set_cookie("visits_count", "1",
                        max_age=60 * 60 * 24 * 365 * 2)
     return res
 
 
-@app.route('/session_test/')
+@app.route("/session_test/")
 def session_test():
-    if 'visits_count' in session:
-        session['visits_count'] = session.get('visits_count') + 1
+    if "visits_count" in session:
+        session["visits_count"] = session.get("visits_count") + 1
         res = make_response(f"Вы пришли на эту страницу {session['visits_count']} раз")
     else:
         session.permanent = True
-        session['visits_count'] = 1
+        session["visits_count"] = 1
         res = make_response(
             "Вы пришли на эту страницу в первый раз за последние 2 года")
     return res
 
 
-if __name__ == '__main__':
-    app.run()
+@app.route("/test")
+def test():
+    return render_template("base.html", base=get_base())
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", debug=True)

@@ -1,82 +1,28 @@
 from requests import get
-from flask import Flask
+from flask import Flask, request
+import requests
+
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
+app.debug = True
+app.config['SECRET_KEY'] = 'a really really really really long secret key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:pass@localhost/flask_app_db'
+app.config['SECRET_KEY'] = 'a really really really really long secret key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:pass@localhost/flask_app_db'
+app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'test@gmail.com'  # введите свой адрес электронной почты здесь
+app.config['MAIL_DEFAULT_SENDER'] = 'test@gmail.com'  # и здесь
+app.config['MAIL_PASSWORD'] = 'password'  # введите пароль
+
+
+mail = Mail(app)
 
 
 
 
-@app.route('/', methods=['POST', 'GET'])
-def form_sample():
-    if request.method == 'GET':
-        return f'''<!doctype html>
-                        <html lang="en">
-                          <head>
-                            <meta charset="utf-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-                            <link rel="stylesheet"
-                            href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-                            integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
-                            crossorigin="anonymous">
-                            <title>Пример формы</title>
-                          </head>
-                          <body>
-                            <h1>Форма для регистрации в суперсекретной системе</h1>
-                            <div>
-                                <form class="login_form" method="post">
-                                    <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Введите адрес почты" name="email">
-                                    <input type="password" class="form-control" id="password" placeholder="Введите пароль" name="password">
-                                    <div class="form-group">
-                                        <label for="classSelect">В каком вы классе</label>
-                                        <select class="form-control" id="classSelect" name="class">
-                                          <option>7</option>
-                                          <option>8</option>
-                                          <option>9</option>
-                                          <option>10</option>
-                                          <option>11</option>
-                                        </select>
-                                     </div>
-                                    <div class="form-group">
-                                        <label for="about">Немного о себе</label>
-                                        <textarea class="form-control" id="about" rows="3" name="about"></textarea>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="photo">Приложите фотографию</label>
-                                        <input type="file" class="form-control-file" id="photo" name="file">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="form-check">Укажите пол</label>
-                                        <div class="form-check">
-                                          <input class="form-check-input" type="radio" name="sex" id="male" value="male" checked>
-                                          <label class="form-check-label" for="male">
-                                            Мужской
-                                          </label>
-                                        </div>
-                                        <div class="form-check">
-                                          <input class="form-check-input" type="radio" name="sex" id="female" value="female">
-                                          <label class="form-check-label" for="female">
-                                            Женский
-                                          </label>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-check">
-                                        <input type="checkbox" class="form-check-input" id="acceptRules" name="accept">
-                                        <label class="form-check-label" for="acceptRules">Готов быть добровольцем</label>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Записаться</button>
-                                </form>
-                            </div>
-                          </body>
-                        </html>'''
-    elif request.method == 'POST':
-        print(request.form['email'])
-        print(request.form['password'])
-        print(request.form['class'])
-        print(request.form['file'])
-        print(request.form['about'])
-        print(request.form['accept'])
-        print(request.form['sex'])
-        return "Форма отправлена"
 
 
 if __name__ == '__main__':

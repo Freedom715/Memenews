@@ -154,14 +154,17 @@ def add_photo():
                 photo.photos = ""
             session.add(photo)
             user = session.query(User).filter(User.id == current_user.id).first()
-            if ", " not in user.photos and current_user.photos == "":
-                user.photos = "'" + str(photo.id) + "'"
-            elif ", " not in user.photos and current_user.photos != "":
-                user.photos = "'" + user.photos.strip("'") + ", " + str(photo.id) + "'"
+            if user.photos:
+                if ", " not in user.photos and current_user.photos == "":
+                    user.photos = "'" + str(photo.id) + "'"
+                elif ", " not in user.photos and current_user.photos != "":
+                    user.photos = "'" + user.photos.strip("'") + ", " + str(photo.id) + "'"
+                else:
+                    user.photos = user.photos.rstrip("'") + ", " + str(photo.id) + "'"
             else:
-                user.photos = user.photos.rstrip("'") + ", " + str(photo.id) + "'"
+                user.photos = str(photo.id)
             session.commit()
-            return redirect("/")
+            return redirect("/profile")
     return render_template("add_photo.html", title="Добавление фото", form=form, base=get_base())
 
 
@@ -322,7 +325,8 @@ def like_post(news_id):
     news = session.query(News).filter(News.id == news_id).first()
     user = session.query(User).filter(User.id == current_user.id).first()
     lst = user.liked_news
-    lst = lst.strip("'")
+    if lst:
+        lst = str(lst).strip("'")
     if user.liked_news == "":
         user.liked_news = str(news_id)
         news.liked += 1
@@ -337,7 +341,7 @@ def like_post(news_id):
         news.liked += 1
     else:
         user = session.query(User).filter(User.id == current_user.id).first()
-        user_liked_news = user.liked_news.strip("'").split(", ")
+        user_liked_news = str(user.liked_news).strip("'").split(", ")
         user_liked_news = list(filter(lambda x: x != news_id, user_liked_news))
         user.liked_news = "'" + ", ".join(user_liked_news) + "'"
         news.liked -= 1
@@ -679,7 +683,8 @@ def index():
         news = session.query(News).filter(
             (News.user == current_user) | (News.is_private != True))
         lst = current_user.liked_news
-        lst = lst.strip("'").split(", ")
+        if lst:
+            lst = str(lst).strip("'").split(", ")
     else:
         news = session.query(News).filter(News.is_private != True)
     return render_template("index.html", news=news, title="Лента", base=get_base(),
@@ -720,4 +725,4 @@ def test():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1")
+    app.run(host="127.0.0.1", debug=True)

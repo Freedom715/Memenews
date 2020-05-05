@@ -2,17 +2,14 @@
 
 {% block content %}
 <div class="col col-xl-10 rounded">
-    <h1>Записи в блоге</h1>
+    <h1>Новости</h1>
     {% if current_user.is_authenticated %}
     <a href="news" class="btn btn-secondary">Добавить новость</a> <br>
     {% endif %}
     <label></label>
     {% for item in news[::-1]%}
     <div class="block">
-        {% if current_user == item.user %}
-        <a href="/news/{{ item.id }}" class="btn btn-warning">Изменить</a>
-        <a href="/news_delete/{{ item.id }}" class="btn btn-danger">Удалить</a>
-        {% endif %}
+
         <div class="col-md6 rounded">
             <div class="media">
                 <a href="/profile/{{item.user.id}}"> <img src="{{item.user.avatar}}"
@@ -35,12 +32,18 @@
                         <a href="/like_post/{{ item.id }}"> <img
                                 src="/static/img/images/{{ base.like_image }}{{ check_like(item.id, lst) }}.png"
                                 width="100" height="100"></a>
-                        <p>Одобрили {{item.liked}} человек</p>
+                        <p>Одобрили {{item.liked}} человек
                     </div>
                     {% endif %}
+                    {% if current_user == item.user %}
+                    <a href="/news/{{ item.id }}" class="btn-sm btn-warning">Изменить</a>
+                    <a href="/news_delete/{{ item.id }}" class="btn-sm btn-danger">Удалить</a>
+                    {% endif %}
+                    <p>
                 </div>
             </div>
         </div>
+
     </div>
     {% endfor %}
 </div>

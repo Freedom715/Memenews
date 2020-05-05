@@ -2,44 +2,45 @@
 
 {% block content %}
 <div class="col-10">
-<h1>Добавление альбома</h1>
+<h1>Добавление фотографии</h1>
 <form action="" method="post"  enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     {{ form.csrf_token }}
     <div class="form-group">
-        <label for="title1">Название</label>
+        <label for="title1">Подпись к фотографии</label>
         <div class="input-group mb-3">
-            <input type="text" class="form-control" id="title1" aria-label="Название"
+            <input type="text" class="form-control" id="title1" aria-label="Подпись"
                    aria-describedby="basic-addon1" name="title"
                    placeholder="Название" required>
         </div>
     </div>
     <div class="form-group">
         <div class="mb-3">
-            <label for="validationTextarea">Об альбоме</label>
+            <label for="validationTextarea">О фотографии</label>
             <textarea class="form-control" id="validationTextarea"
-                      placeholder="Текст" name="content"></textarea>
+                      placeholder="Описание" name="content"></textarea>
         </div>
     </div>
     <div class="form-group">
         <div class="custom-control custom-switch">
             <input type="checkbox" class="custom-control-input" id="customSwitch1" name="private">
-            <label class="custom-control-label" for="customSwitch1">Приватный альбом (виден только
+            <label class="custom-control-label" for="customSwitch1">Приватная фотография(видна только
                 вам)</label>
         </div>
     </div>
     <div class="form-group">
-        <label for="inputGroupFile03">Выберите файл для обложки(не обязательно)</label>
+        <label for="inputGroupFile03">Выберите файл фотографии</label>
         <div class="input-group mb-3">
             <div class="custom-file">
-                <input type="file" class="custom-file-input" id="inputGroupFile03" name="images">
+                <input type="file" class="custom-file-input" id="inputGroupFile03"
+                       name="images" required>
                 <label class="custom-file-label" for="inputGroupFile03" data-browse="Обзор"
                        aria-describedby="inputGroupFileAddon02"></label>
             </div>
         </div>
     </div>
     <div class="form-group">
-        <input class="btn btn-primary" type="submit" value="Сохранить пост">
+        <input class="btn btn-primary" type="submit" value="Сохранить фотографию">
     </div>
 
 </form>

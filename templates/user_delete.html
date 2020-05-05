@@ -2,11 +2,12 @@
 
 {% block content %}
 <div class="col-md-8">
-    <h1>Удаление профиля</h1>
+    <h1>Вы уверены, что хотите удалить аккаунт?</h1>
     <form action="" method="post">
         {{ form.hidden_tag() }}
         {{ form.csrf_token }}
         <p>
+            {{ form.password.label }}
             {{ form.password(class="form-control", type="password") }}<br>
             {% for error in form.password.errors %}
         <p class="alert alert-danger" role="alert">
@@ -14,7 +15,7 @@
         </p>
         {% endfor %}
         <p>
-            <button type="submit" class="btn btn-secondary btn-lg">Удалить</button>
+            <button type="submit" class="btn btn-danger btn-lg">Удалить</button>
         </p>
         <p>{{message}} </p>
     </form>

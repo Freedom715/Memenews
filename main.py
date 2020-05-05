@@ -69,8 +69,8 @@ class RegisterForm(FlaskForm):
     name = StringField("Имя пользователя")
     status = TextAreaField("Немного о себе")
     submit = SubmitField("Отправить проверочное сообщение на указанную почту")
-    submit_email = SubmitField("Подтвердить")
-    key = StringField("Имя пользователя")
+    submit_email = SubmitField("Зарегистрироваться")
+    key = StringField("Введите проверочный код")
 
 
 class LoginForm(FlaskForm):
@@ -93,7 +93,7 @@ class ProfileForm(FlaskForm):
     cur_user = current_user
     friends = [current_user]
     error = ""
-    password = PasswordField("Пароль", validators=[DataRequired()])
+    password = PasswordField("Для удаления введите пароль", validators=[DataRequired()])
 
 
 class UsersForm(FlaskForm):
@@ -211,13 +211,12 @@ def messages():
     people_id = []
     people = []
     for elem in messages:
-        if not (elem.user_to_id in people_id or elem.user_from_id in people_id):
-            if elem.user_to_id == current_user.id:
-                people.append(session.query(User).filter(User.id == elem.user_from_id).first())
-                people_id.append(elem.user_from_id)
-            else:
-                people.append(session.query(User).filter(User.id == elem.user_to_id).first())
-                people_id.append(elem.user_to_id)
+        if elem.user_to_id not in people_id:
+            people.append(session.query(User).filter(User.id == elem.user_to_id).first())
+            people_id.append(elem.user_to_id)
+        elif elem.user_from_id not in people_id:
+            people.append(session.query(User).filter(User.id == elem.user_from_id).first())
+            people_id.append(elem.user_from_id)
     return render_template("messages.html", base=get_base(), people=people)
 
 
@@ -445,6 +444,7 @@ def edit_news(id):
             form.title = news.title
             form.content = news.content
             form.is_private = news.is_private
+            form.image = news.image
         else:
             abort(404)
     if form.validate_on_submit():
@@ -656,7 +656,7 @@ def register():
             session.commit()
             email_confirmation = False
             print("ok")
-            return redirect("/login")
+            return redirect("/")
         else:
             return render_template("confirm_email.html", title="Регистрация", form=form, base=get_base(),
                                    message="Коды не совпадают")

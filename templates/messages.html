@@ -1,14 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
-        <div class="col-10 block">
+        <div class="col-10">
             {% for elem in people %}
-            <div class="media">
+            <div class="media block">
                 <a href="/profile/{{elem.id}}"> <img src="{{elem.avatar}}"
                                                      class="align-self-center mr-3" alt="PEP8"
                                                      width="100"
                                                      height="100" title="{{elem.name}}">
-
                 </a>
                 <div class="media-body">
                     <h2>{{elem.name}}</h2>

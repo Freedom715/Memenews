@@ -409,7 +409,9 @@ def get_profile(user_id):
     else:
         form.friends = []
         form.error = "У этого пользователя еще нет друзей. Напишите ему, может быть вы подружитесь."
-    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "перешел в профиль", user.name, user_id)
+    if current_user.is_authenticated:
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "перешел в профиль",
+              user.name, user_id)
     return render_template("profile.html", title="Профиль", form=form, photo=photo,
                            base=get_base())
 

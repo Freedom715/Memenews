@@ -27,7 +27,7 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     liked_news = sqlalchemy.Column(sqlalchemy.String, nullable=True, default='')
     liked_photos = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=True)
     background = sqlalchemy.Column(sqlalchemy.String, default='/static/img/backgrounds/fon2.png')
-    theme = sqlalchemy.Column(sqlalchemy.Boolean, default=1)
+    theme = sqlalchemy.Column(sqlalchemy.Integer, default=1)
     photos = sqlalchemy.Column(sqlalchemy.String, default='')
 
     def __repr__(self):

@@ -116,12 +116,23 @@ class MemesForm(FlaskForm):
 
 def get_base():
     base = BaseForm()
+    theme = current_user.theme
     if current_user.is_authenticated:
-        base.background = current_user.background
-        base.text_color = "white" if not current_user.theme else "black"
-        base.back = "#0a0a0a" if not current_user.theme else "#f5f5f5"
-        base.back_color = "#1e1e1e" if not current_user.theme else "#969696"
-        base.like_image = "like(dark)" if not current_user.theme else "like"
+        if theme == 0 or theme == 1:
+            base.background = current_user.background
+            base.text_color = "white" if theme == 1 else "black"
+            base.back = "#0a0a0a" if theme == 1 else "#f5f5f5"
+            base.back_color = "#1e1e1e" if theme == 1 else "#969696"
+            base.like_image = "like(dark)" if theme == 1 else "like"
+        else:
+            if theme == 2:
+                base.background = url_for("static", filename="img/backgrounds/fon2.png")
+            else:
+                base.background = url_for("static", filename="img/backgrounds/fon2_dark.png")
+            base.text_color = "white" if theme == 3 else "black"
+            base.back = "#0a0a0a" if theme == 3 else "#f5f5f5"
+            base.back_color = "#1e1e1e" if theme == 3 else "#969696"
+            base.like_image = "like(dark)" if theme == 3 else "like"
     else:
         base.background = ""
         base.text_color = "black"
@@ -324,9 +335,13 @@ def settings():
             print("Вы очень похожи на", name)
             user.avatar = url_for("static", filename=f"img/avatars/{filename}")
         if theme == "0":
-            user.theme = False
+            user.theme = 0
         elif theme == "1":
-            user.theme = True
+            user.theme = 1
+        elif theme == "2":
+            user.theme = 2
+        elif theme == "3":
+            user.theme = 3
         print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "сменил настройки")
         session.commit()
         return redirect(f"/profile/{current_user.id}")
@@ -585,9 +600,6 @@ def login():
                                message="Неправильный логин или пароль",
                                form=form, base=get_base())
     return render_template("login.html", title="Авторизация", form=form, base=get_base())
-
-
-
 
 
 @app.route("/register", methods=["GET", "POST"])

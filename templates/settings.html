@@ -21,7 +21,7 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="label2">Имя пользователя</span>
                 </div>
-                <input type="text" class="form-control" placeholder={{user.name}}
+                <input type="text" class="form-control" value={{user.name}}
                        aria-label="Username"
                        aria-describedby="basic-addon1" name="username">
             </div>
@@ -31,7 +31,7 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="label3">Статус</span>
                 </div>
-                <input type="text" class="form-control" placeholder={{user.status}}
+                <input type="text" class="form-control" value={{user.status}}
                        aria-label="Username"
                        aria-describedby="basic-addon1" name="status">
             </div>
@@ -55,11 +55,26 @@
                     <label class="input-group-text" for="inputGroupSelect01">Тема</label>
                 </div>
                 <select class="custom-select" id="inputGroupSelect01" name="theme">
-                    <option selected>Тема</option>
-                    <option value="0">Белый текст с пользовательским фоном</option>
-                    <option value="1">Черный текст с пользовательским фоном</option>
+                    {% if user.theme == 0 %}
+                        <option selected value="0">Черный текст с пользовательским фоном</option>
+                    {% else %}
+                        <option value="0">Черный текст с пользовательским фоном</option>
+                    {% endif %}
+                    {% if user.theme == 1 %}
+                        <option selected value="1">Белый текст с пользовательским фоном</option>
+                    {% else %}
+                        <option value="1">Белый текст с пользовательским фоном</option>
+                    {% endif %}
+                    {% if user.theme == 2 %}
+                    <option selected value="2">Светлая тема со стандартным фоном</option>
+                    {% else %}
                     <option value="2">Светлая тема со стандартным фоном</option>
+                    {% endif %}
+                    {% if user.theme == 3 %}
+                    <option selected value="3">Темная тема со стандартным фоном</option>
+                    {% else %}
                     <option value="3">Темная тема со стандартным фоном</option>
+                    {% endif %}
                 </select>
             </div>
         </div>
@@ -78,6 +93,7 @@
       btn.addEventListener('click', function () {
         form.reset()
       })
+
 
 
 

@@ -116,8 +116,8 @@ class MemesForm(FlaskForm):
 
 def get_base():
     base = BaseForm()
-    theme = current_user.theme
     if current_user.is_authenticated:
+        theme = current_user.theme
         if theme == 0 or theme == 1:
             base.background = current_user.background
             base.text_color = "white" if theme == 1 else "black"

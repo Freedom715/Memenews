@@ -3,6 +3,7 @@
 {% block content %}
         <div class="col-10">
             {% for elem in people %}
+            {% if elem.id != current_user.id %}
             <div class="media block">
                 <a href="/profile/{{elem.id}}"> <img src="{{elem.avatar}}"
                                                      class="align-self-center mr-3" alt="PEP8"
@@ -14,9 +15,8 @@
                     <a class="btn btn-primary" href="/messages/{{elem.id}}" role="button">Перейти к
                         беседе</a>
                 </div>
-
             </div>
+            {% endif %}
             {% endfor %}
         </div>
-
 {% endblock %}

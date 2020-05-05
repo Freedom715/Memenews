@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="col-xl-7 border">
+<div class="col-xl-7 block">
     <div class="row justify-content-around">
         <img src={{path[0]}} width="300" height="300">
         <img src={{path[1]}} width="300" height="300">
@@ -13,7 +13,7 @@
 <div>
 <form method="post" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
-    <div class="col-xl-100 border">
+    <div class="col-xl-100 block">
         <div>
             <button type="submit" class="btn btn-primary btn-lg btn-block">Загрузить</button>
             <div class="form-group">

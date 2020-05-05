@@ -21,7 +21,7 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="label2">Имя пользователя</span>
                 </div>
-                <input type="text" class="form-control" value={{user.name}}
+                <input type="text" class="form-control" value="{{user.name}}"
                        aria-label="Username"
                        aria-describedby="basic-addon1" name="username">
             </div>
@@ -31,7 +31,7 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="label3">Статус</span>
                 </div>
-                <input type="text" class="form-control" value={{user.status}}
+                <input type="text" class="form-control" value="{{user.status}}"
                        aria-label="Username"
                        aria-describedby="basic-addon1" name="status">
             </div>
@@ -82,9 +82,7 @@
             <button type="submit" class="btn btn-secondary btn-lg">Применить</button>
             <a href="/user_delete/{{current_user.id}}" class="btn btn-secondary btn-lg">Удаление аккаунта</a>
         </div>
-
     </form>
-
     <script>
       bsCustomFileInput.init()
 

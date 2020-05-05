@@ -138,7 +138,7 @@ def get_base():
         base.text_color = "black"
         base.back = "#0a0a0a"
         base.back_color = "#969696"
-    base.js_for_files = url_for("static", filename="/js/bs-custom-file-input.js")
+    base.js_for_files = url_for("static", filename="js/bs-custom-file-input.js")
     return base
 
 
@@ -160,6 +160,7 @@ def add_photo():
             photo.name = request.form.get("title")
             photo.content = request.form.get("content")
             photo.is_private = request.form.get("private")
+            photo.user = current_user.id
             f = request.files.get("images")
             if f:
                 filename = secure_filename(f.filename)
@@ -209,7 +210,7 @@ def messenger(user_id):
         session.commit()
         print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "отправил сообщение пользователю",
               session.query(User).filter(User.id == user_id).first().name)
-        return render_template("messenger.html", base=get_base(), messages=messages, user_to=user_to,
+        return render_template("messenger.html", base=get_base(), title="Телеграф", messages=messages, user_to=user_to,
                                get_time=get_time)
 
 
@@ -228,7 +229,7 @@ def messages():
         elif elem.user_from_id not in people_id:
             people.append(session.query(User).filter(User.id == elem.user_from_id).first())
             people_id.append(elem.user_from_id)
-    return render_template("messages.html", base=get_base(), people=people)
+    return render_template("messages.html", base=get_base(), people=people, title="Телеграф")
 
 
 @app.route("/message_delete/<id>", methods=["GET", "POST"])
@@ -247,17 +248,16 @@ def message_delete(id):
 
 
 @app.route("/photo/<photo_id>")
-@login_required
 def photo(photo_id):
     session = db_session.create_session()
     photo = session.query(Photo).filter(Photo.id == photo_id).first()
-    if photo_id in current_user.photos:
-        # Проверка наналичие фотографии в фотографиях пользователя
-        # и последующем отображении кнопки удалить
-        user = True
-    else:
-        user = False
-    return render_template("photos.html", base=get_base(), photo=photo, user=user)
+    # if photo_id in current_user.photos:
+    #     # Проверка наналичие фотографии в фотографиях пользователя
+    #     # и последующем отображении кнопки удалить
+    #     user = True
+    # else:
+    #     user = False
+    return render_template("photos.html", base=get_base(), photo=photo)
 
 
 @app.route("/photo_delete/<photo_id>")
@@ -295,7 +295,8 @@ def add_friend(user_id):
             user.friends = user.friends[:-1] + ", " + str(user_id) + "'"
         print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "добавил в друзья", user_id)
         session.commit()
-    return redirect(f"/profile/{user_id}")
+    url_from = request.args.get('url_from')
+    return redirect(url_from)
 
 
 @login_manager.user_loader
@@ -310,6 +311,7 @@ def settings():
     session = db_session.create_session()
     user = session.query(User).filter(User.id == current_user.id).first()
     if request.method == "GET":
+        print(user.status)
         return render_template("settings.html", title="Параметры", base=get_base(),
                                user=user)
     elif request.method == "POST":
@@ -342,6 +344,7 @@ def settings():
             user.theme = 2
         elif theme == "3":
             user.theme = 3
+
         print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "сменил настройки")
         session.commit()
         return redirect(f"/profile/{current_user.id}")
@@ -385,9 +388,10 @@ def friend_delete(friend_id):
     user_friends = user.friends.strip("'").split(", ")
     user_friends = list(filter(lambda x: x != friend_id, user_friends))
     user.friends = "'" + ", ".join(user_friends) + "'"
+    url_from = request.args.get('url_from')
     print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "удалил друга( ", friend_id)
     session.commit()
-    return redirect("/people")
+    return redirect(url_from)
 
 
 @app.route("/profile/<user_id>")
@@ -395,10 +399,10 @@ def get_profile(user_id):
     form = ProfileForm()
     session = db_session.create_session()
     user = session.query(User).filter(User.id == user_id).first()
+    form.user = user
     if user.photos:
         photo = session.query(Photo).filter(Photo.id.in_(user.photos.strip("'").split(", "))).all()
         form.photo = photo[:6]
-        form.user = user
     else:
         photo = ""
         form.photo = ""
@@ -412,8 +416,12 @@ def get_profile(user_id):
     if current_user.is_authenticated:
         print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "перешел в профиль",
               user.name, user_id)
+        friends = session.query(User).filter(User.id.in_(current_user.friends.strip("'").split(", "))).all()
+        friends_id = [elem.id for elem in friends]
+    else:
+        friends_id = []
     return render_template("profile.html", title="Профиль", form=form, photo=photo,
-                           base=get_base())
+                           base=get_base(), friends_id=friends_id)
 
 
 @login_required
@@ -500,7 +508,7 @@ def get_people():
     find_string = request.form.get("find_string")
     if form.validate_on_submit():
         if form.find_string.data:
-            users = session.query(User).filter(User.name.like(f"%{find_string}%")).all()
+            users = session.query(User).filter(User.name.like(f"{find_string}")).all()
         else:
             users = session.query(User).all()
     users = set(users)
@@ -608,6 +616,9 @@ def login():
 def register():
     global email_confirmation, name, email, status, key, password
     form = RegisterForm()
+    cancel = request.args.get("cancel")
+    if cancel:
+        email_confirmation = False
     session = db_session.create_session()
     if form.validate_on_submit() and not email_confirmation:
         if not check_password(form.password.data):
@@ -661,7 +672,7 @@ def register():
                 email=email,
                 status=status,
                 friends="",
-                theme=1,
+                theme=2,
                 liked_news=""
             )
             user.set_password(password)
@@ -679,7 +690,7 @@ def register():
 
 
 @app.route("/user_delete/<int:user_id>", methods=["GET", "POST"])
-def user_delete(user_id):
+def delete_user(user_id):
     session = db_session.create_session()
     form = ProfileForm()
     user = session.query(User).filter(User.id == user_id, user_id == current_user.id).first()
@@ -689,10 +700,14 @@ def user_delete(user_id):
         if user.check_password(form.password.data):
             if user:
                 print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "молча удалился")
-                user.name = "DELETE"
+                user.name = "DELETED"
                 user.status = "Удалён"
                 user.avatar = "/static/img/avatars/no_avatar.png"
                 user.photos = ""
+                user.email = user.id
+                news = session.query(News).filter(News.user_id == user_id).all()
+                for elem in news:
+                    session.delete(elem)
                 session.commit()
             else:
                 abort(404)

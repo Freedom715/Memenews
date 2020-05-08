@@ -11,6 +11,7 @@ from flask_restful import Api
 from flask_wtf import FlaskForm
 from sqlalchemy import or_
 from werkzeug.exceptions import abort
+from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField, BooleanField
 from wtforms.fields.html5 import EmailField
@@ -99,6 +100,13 @@ class ProfileForm(FlaskForm):
 class UsersForm(FlaskForm):
     find_string = StringField("Поиск людей")
     submit = SubmitField("Найти")
+
+
+class PasswordForm(FlaskForm):
+    old_password = PasswordField("Введите старый пароль")
+    password = PasswordField("Ввведите новый пароль")
+    password_again = PasswordField("Повторите новый пароль")
+    submit = SubmitField("Войти")
 
 
 def choice_name():
@@ -287,7 +295,7 @@ def photo_delete(photo_id):
 
 
 @app.route("/photo_edit/<photo_id>", methods=["GET", "POST"])
-def photo_edit(photo_id): #TODO
+def photo_edit(photo_id):
     session = db_session.create_session()
     form = UsersForm()
     photo = session.query(Photo).filter(Photo.id == photo_id)
@@ -336,52 +344,6 @@ def add_friend(user_id):
 def load_user(user_id):
     session = db_session.create_session()
     return session.query(User).get(user_id)
-
-
-@login_required
-@app.route("/settings", methods=["GET", "POST"])
-def settings():
-    session = db_session.create_session()
-    user = session.query(User).filter(User.id == current_user.id).first()
-    if request.method == "GET":
-        print(user.status)
-        return render_template("settings.html", title="Параметры", base=get_base(),
-                               user=user)
-    elif request.method == "POST":
-        avatar = request.files.get("avatar")
-        username = request.form.get("username")
-        status = request.form.get("status")
-        background = request.files.get("background")
-        theme = request.form.get("theme")
-        if username:
-            user.name = username
-        if status:
-            user.status = status
-        if background:
-            f = background
-            filename = secure_filename(f.filename)
-            f.save("static/img/backgrounds/" + filename)
-            user.background = url_for("static", filename=f"img/backgrounds/{filename}")
-        if avatar:
-            f = avatar
-            filename = secure_filename(f.filename)
-            f.save("static/img/avatars/" + filename)
-            name = analyze_image_meme("static/img/avatars/" + filename)
-            print("Вы очень похожи на", name)
-            user.avatar = url_for("static", filename=f"img/avatars/{filename}")
-        if theme == "0":
-            user.theme = 0
-        elif theme == "1":
-            user.theme = 1
-        elif theme == "2":
-            user.theme = 2
-        elif theme == "3":
-            user.theme = 3
-
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
-              "сменил настройки")
-        session.commit()
-        return redirect(f"/profile/{current_user.id}")
 
 
 @app.route("/like_post/<news_id>", methods=["GET", "POST"])
@@ -655,6 +617,76 @@ def login():
     return render_template("login.html", title="Авторизация", form=form, base=get_base())
 
 
+@app.route("/password_reset", methods=["GET", "POST"])
+@login_required
+def password_reset():
+    session = db_session.create_session()
+    form = PasswordForm()
+    url_from = request.args.get('url_from')
+    print(url_from)
+    if url_from == '/settings':
+        if request.method == "GET":
+            return render_template("password_reset.html", base=get_base(), form=form)
+        if request.method == "POST":
+            if not current_user.check_password(request.form.get("old_password")):
+                return render_template("password_reset.html", base=get_base(), form=form,
+                                       message="Неверный пароль")
+            if form.password.data != form.password_again.data:
+                return render_template("password_reset.html", base=get_base(), form=form,
+                                       message="Пароли не совпадают")
+            print(current_user, form.password.data)
+            password = form.password.data
+            user = session.query(User).filter(User.id == current_user.id)
+            user.hashed_password = generate_password_hash(password)
+            session.commit()
+
+
+@login_required
+@app.route("/settings", methods=["GET", "POST"])
+def settings():
+    session = db_session.create_session()
+    user = session.query(User).filter(User.id == current_user.id).first()
+    if request.method == "GET":
+        print(user.status)
+        return render_template("settings.html", title="Параметры", base=get_base(),
+                               user=user)
+    elif request.method == "POST":
+        avatar = request.files.get("avatar")
+        username = request.form.get("username")
+        status = request.form.get("status")
+        background = request.files.get("background")
+        theme = request.form.get("theme")
+        if username:
+            user.name = username
+        if status:
+            user.status = status
+        if background:
+            f = background
+            filename = secure_filename(f.filename)
+            f.save("static/img/backgrounds/" + filename)
+            user.background = url_for("static", filename=f"img/backgrounds/{filename}")
+        if avatar:
+            f = avatar
+            filename = secure_filename(f.filename)
+            f.save("static/img/avatars/" + filename)
+            name = analyze_image_meme("static/img/avatars/" + filename)
+            print("Вы очень похожи на", name)
+            user.avatar = url_for("static", filename=f"img/avatars/{filename}")
+        if theme == "0":
+            user.theme = 0
+        elif theme == "1":
+            user.theme = 1
+        elif theme == "2":
+            user.theme = 2
+        elif theme == "3":
+            user.theme = 3
+
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+              "сменил настройки")
+        session.commit()
+        return redirect(f"/profile/{current_user.id}")
+
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     global email_confirmation, name, email, status, key, password
@@ -673,7 +705,6 @@ def register():
             return render_template("register.html", title="Регистрация",
                                    form=form,
                                    message=check_password(form.password.data), base=get_base())
-
         if session.query(User).filter(User.email == form.email.data).first():
             return render_template("register.html", title="Регистрация",
                                    form=form,

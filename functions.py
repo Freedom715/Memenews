@@ -10,11 +10,9 @@ def check_like(news_id, lst):
 
 
 def check_password(password):
-    print('Function!')
     if len(password) >= 8:
         if not password.isalpha() and not password.isdigit():
             if password.lower() != password:
-                print(password)
                 return ''
             return 'В пароле должны быть буквы разного уровня'
         return 'В пароле должна быть хоть одна цифра или буква'
@@ -22,7 +20,6 @@ def check_password(password):
 
 
 def get_time(date_input, time_input):
-    print(str(date_input))
     year, month, day = str(date_input).split("-")
     date = datetime.date(int(year), int(month), int(day))
     current_date_time = datetime.datetime.now()

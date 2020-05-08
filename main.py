@@ -233,14 +233,16 @@ def messages():
         or_(Message.user_from_id == current_user.id, Message.user_to_id == current_user.id)).all()
     people_id = []
     people = []
+    print([elem.id for elem in messages])
     for elem in messages:
         if elem.user_to_id not in people_id:
             people.append(session.query(User).filter(User.id == elem.user_to_id).first())
             people_id.append(elem.user_to_id)
-        elif elem.user_from_id not in people_id:
+        if elem.user_from_id not in people_id:
             people.append(session.query(User).filter(User.id == elem.user_from_id).first())
             people_id.append(elem.user_from_id)
-    return render_template("messages.html", base=get_base(), people=people, title="Телеграф")
+    return render_template("messages.html", base=get_base(), people_id=people_id,
+                           people=people, title="Телеграф")
 
 
 @app.route("/message_delete/<id>", methods=["GET", "POST"])
@@ -298,23 +300,20 @@ def photo_delete(photo_id):
 def photo_edit(photo_id):
     session = db_session.create_session()
     form = UsersForm()
-    photo = session.query(Photo).filter(Photo.id == photo_id)
+    photo = session.query(Photo).filter(Photo.id == photo_id).first()
     if request.method == "GET":
         return render_template("photo_edit.html", photo=photo, title="Редактирование фотографии",
                                base=get_base(), form=form)
-    if form.validate_on_submit():
+    if request.method == "POST":
         photo.name = request.form.get("title")
         photo.user = current_user.id
         f = request.files.get("images")
         if f:
+            print("ok")
             filename = secure_filename(f.filename)
             f.save("static/img/photos/covers/" + filename)
             photo.cover = url_for("static", filename=f"img/photos/covers/{filename}")
             photo.photos = url_for("static", filename=f"img/photos/covers/{filename}")
-        else:
-            photo.cover = "/static/img/photos/sample_covers/{}.png".format(
-                choice(["ololo", "trollface", "i_dont_now", "aaaaa"]))
-            photo.photos = ""
         print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "изменил фото",
               photo.name)
         session.commit()
@@ -502,23 +501,22 @@ def edit_news(id):
 @app.route("/people", methods=["GET", "POST"])
 def get_people():
     form = UsersForm()
-    js = url_for("static", filename="js/bs-custom-file-input.js")
     session = db_session.create_session()
-    users = session.query(User)
-    friends = session.query(User).filter(
-        User.id.in_(current_user.friends.strip("'").split(", "))).all()
-    friends = set(friends)
-    find_string = request.form.get("find_string")
+    users = set(session.query(User))
+    friends = set(session.query(User).filter(
+        User.id.in_(current_user.friends.strip("'").split(", "))).all())
     if form.validate_on_submit():
+        find_string = request.form.get("find_string")
         if form.find_string.data:
-            users = session.query(User).filter(User.name.like(f"{find_string}")).all()
+            users = set(session.query(User).filter(User.name.like(f"%{find_string}%")).all())
+            friends = set(session.query(User).filter(
+                User.id.in_(current_user.friends.strip("'").split(", "))).filter(
+                User.name.like(f"%{find_string}%")).all())
         else:
             users = session.query(User).all()
-    users = set(users)
     users -= friends
     return render_template("people.html", form=form, users=users, title="Люди", base=get_base(),
-                           friends=friends,
-                           js=js)
+                           friends=friends)
 
 
 @app.route("/neuro/<neuroname>", methods=["GET", "POST"])
@@ -636,9 +634,10 @@ def password_reset():
                                        message="Пароли не совпадают")
             print(current_user, form.password.data)
             password = form.password.data
-            user = session.query(User).filter(User.id == current_user.id)
+            user = session.query(User).filter(User.id == current_user.id).first()
             user.hashed_password = generate_password_hash(password)
             session.commit()
+            return redirect("/settings")
 
 
 @login_required

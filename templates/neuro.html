@@ -1,49 +1,68 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="col-xl-7 block">
-    <div class="row justify-content-around">
-        <img src={{path[0]}} width="300" height="300">
-        <img src={{path[1]}} width="300" height="300">
+<div class="row block justify-content-center">
+    <div class="col-xl block rounded-lg">
+        <div class="row justify-content-around">
+            <img src={{path[0]}} width="300" height="300" class="rounded-lg">
+            <img src={{path[1]}} width="300" height="300" class="rounded-lg">
+        </div>
+        <br>
+        <h2 align="center">{{name}}</h2>
     </div>
-    <br>
-    <h2 align="center">{{name}}</h2>
-<!--    <h5> Забавный факт: {{fact}} </h5>-->
-</div>
-<div>
-<form method="post" enctype="multipart/form-data">
-    {{ form.hidden_tag() }}
-    <div class="col-xl-100 block">
-        <div>
-            <button type="submit" class="btn btn-primary btn-lg btn-block">Загрузить</button>
-            <div class="form-group">
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="label4">Ваш файл</span>
-                    </div>
-                    <div class="custom-file">
-                        <input type="file" class="custom-file-input" id="images" name="images">
-                        <label class="custom-file-label" for="images" data-browse="Обзор"
-                               aria-describedby="inputGroupFileAddon02">{{path[0]}}</label>
+    <div>
+        <form method="post" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <div class="col-xl block rounded-lg mx-auto">
+                <h4>Выберите тип нейросети  и <br>загрузите ваше изображение</h4>
+                {% if neuroname == "meme" %}
+                <a href="/neuro/meme" class="btn btn-success btn-lg btn-block">Мемы</a>
+                <br>
+                {% else %}
+                <a href="/neuro/meme" class="btn btn-secondary btn-lg btn-block">Мемы</a>
+                <br>
+                {% endif %}
+                {% if neuroname == "lions" %}
+                <a href="/neuro/lions" class="btn btn-success btn-lg btn-block">Лев,
+                    тигр и леопард</a>
+                <br>
+                {% else %}
+                <a href="/neuro/lions" class="btn btn-secondary btn-lg btn-block">Лев,
+                    тигр и леопард</a>
+                <br>
+                {% endif %}
+                {% if neuroname == "cat_dogs" %}
+                <a href="/neuro/cat_dogs" class="btn btn-success btn-lg btn-block">Кошечка или
+                    собачка?</a>
+                <br>
+                {% else %}
+                <a href="/neuro/cat_dogs" class="btn btn-secondary btn-lg btn-block">Кошечка или
+                    собачка?</a>
+                <br>
+                {% endif %}
+                <a href="/neuro/cat_dogs" class="btn btn-secondary btn-lg btn-block">Кошечка или
+                    собачка?</a><br>
+                <div class="form-group">
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="label4">Ваш файл</span>
+                        </div>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="images" name="images">
+                            <label class="custom-file-label" for="images" data-browse="Обзор"
+                                   aria-describedby="inputGroupFileAddon02">{{path[0]}}</label>
+                        </div>
                     </div>
                 </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">Загрузить</button>
+                <br>
+
             </div>
-        </div>
-        <div class="div1">
-            <a href="/neuro/meme" class="btn btn-secondary btn-lg btn-block">Мемы</a> <br></div>
-        <div class="div1">
-            <a href="/neuro/lions" class="btn btn-secondary btn-lg btn-block">Лев, тигр и леопард</a>
-            <br>
-        </div>
-        <div class="div1">
-            <a href="/neuro/cat_dogs" class="btn btn-primary btn-lg btn-secondary btn-block">Кошечка или
-                собачка?</a> <br></div>
+        </form>
     </div>
-</form>
-    </div>
+</div>
 <script>
 bsCustomFileInput.init()
-
       var btn = document.getElementById('btnResetForm')
       var form = document.querySelector('form')
       btn.addEventListener('click', function () {

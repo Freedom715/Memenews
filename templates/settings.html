@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="col-md-8">
+<div class="col-xl">
     <h1>Параметры</h1>
     <form method="post" enctype="multipart/form-data">
         <div class="form-group">
@@ -78,24 +78,22 @@
                 </select>
             </div>
         </div>
-        <a href="/password_reset?url_from=/settings" class="btn btn-secondary btn-block">Смена пароля</a> <br>
         <div class="row justify-content-around">
-            <button type="submit" class="btn btn-secondary btn-lg">Применить</button>
-            <a href="/user_delete/{{current_user.id}}" class="btn btn-secondary btn-lg">Удаление аккаунта</a>
+            <button type="submit"
+                    class="btn btn-success btn-lg">Применить</button>
+            <a href="/password_reset?url_from=/settings"
+               class="btn btn-secondary btn-lg">Смена пароля</a> <br>
+            <a href="/user_delete/{{current_user.id}}"
+               class="btn btn-danger btn-lg">Удаление аккаунта</a>
         </div>
     </form>
     <script>
       bsCustomFileInput.init()
-
       var btn = document.getElementById('btnResetForm')
       var form = document.querySelector('form')
       btn.addEventListener('click', function () {
         form.reset()
       })
-
-
-
-
     </script>
 </div>
 {% endblock %}

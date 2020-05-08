@@ -34,35 +34,39 @@
     {% endif %}
 
     .div1 {
-    margin: 2.0em 2.0em 0em;}
+    margin-top: 30px}
 
     .main {margin-top: 80px}
+    .messenger {margin-bottom: 55px}
+
 
     </style>
 </head>
 <body>
 <header>
     <nav class="navbar navbar-dark bg-dark fixed-top">
-        <a class="navbar-brand" href="/">Лента</a>
-        {% if current_user.is_authenticated %}
-        <a class="navbar-brand" href="/messages">Телеграф</a>
-        <a class="navbar-brand" href="/neuro/meme">Нейросеть</a>
-        <a class="navbar-brand" href="/people">Люди</a>
-        <a class="navbar-brand" href="/profile/{{current_user.id}}">
-            <img src={{current_user.avatar}}
-                 width="50" height="50"
-                 alt="PEP8" class="d-inline-block align-top"> {{current_user.name}}
-        </a>
-        {% else %}
-        <p>
-            <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
-            <a class="btn btn-success" href="/login">Войти</a>
-        </p>
-        {% endif %}
+        <div class="container-fluid container-sm">
+            <a class="navbar-brand" href="/">Лента</a>
+            {% if current_user.is_authenticated %}
+            <a class="navbar-brand" href="/messages">Телеграф</a>
+            <a class="navbar-brand" href="/neuro/meme">Нейросеть</a>
+            <a class="navbar-brand" href="/people">Люди</a>
+            <a class="navbar-brand" href="/profile/{{current_user.id}}">
+                <img src={{current_user.avatar}}
+                     width="50" height="50"
+                     alt="PEP8" class="d-inline-block align-top rounded-lg"> {{current_user.name}}
+            </a>
+            {% else %}
+            <p>
+                <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
+                <a class="btn btn-success" href="/login">Войти</a>
+            </p>
+            {% endif %}
+        </div>
     </nav>
 </header>
 <!-- Begin page content -->
-<main role="main" class="container-fluid">
+<main role="main" class="container-sm">
     <div class="row justify-content-center main">
         {% block content %}{% endblock %}
     </div>

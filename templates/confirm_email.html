@@ -8,8 +8,8 @@
         поле ниже для продолжения регистрации</h5>
         {{ form.key.label }}<br>
         {{ form.key(class="form-control") }}<br>
-        {{ form.submit_email(type="submit", class="btn btn-primary") }}<br>
-        <a href="/register?cancel=True" class="btn btn-danger btn-lg btn-block">Удаление аккаунта</a>
+        {{ form.submit_email(type="submit", class="btn btn-primary") }}
+        <a href="/register?cancel=True" class="btn btn-danger btn-lg">Отмена регистрации</a>
         {% if message %}
         <p>{{message}}</p>
         {% endif %}

@@ -203,18 +203,24 @@ def messenger(user_id):
     session = db_session.create_session()
     user_to = session.query(User).filter(User.id == user_id).first()
     if request.method == "GET":
-        messages = session.query(Message).filter(Message.user_from_id == current_user.id,
-                                                     Message.user_to_id == user_id)
-        if messages:
+        messages = [elem for elem in session.query(Message).filter(Message.user_from_id == current_user.id,
+                                                                   Message.user_to_id == user_id)]
+        messages += [elem for elem in session.query(Message).filter(Message.user_to_id == current_user.id,
+                                                                    Message.user_from_id == user_id)]
+
+        if not messages == []:
             last = max([elem.id for elem in messages])
         else:
             last = 0
         return render_template(f"messenger.html", base=get_base(), messages=messages, user_to=user_to,
                                get_time=get_time, last=last)
     elif request.method == "POST":
-        messages = session.query(Message).filter(Message.user_from_id == current_user.id,
-                                                     Message.user_to_id == user_id)
-        if messages:
+        messages = [elem for elem in session.query(Message).filter(Message.user_from_id == current_user.id,
+                                                                   Message.user_to_id == user_id)]
+        messages += [elem for elem in session.query(Message).filter(Message.user_to_id == current_user.id,
+                                                                    Message.user_from_id == user_id)]
+
+        if not messages == []:
             last = max([elem.id for elem in messages])
         else:
             last = False
@@ -261,7 +267,7 @@ def message_delete(id):
     message = session.query(Message).filter(Message.id == id,
                                             Message.user_from_id == current_user.id).first()
     messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
-                                                     Message.user_to_id == current_user.id))
+                                                 Message.user_to_id == current_user.id))
     if messages:
         last = max([elem.id for elem in messages])
     else:
@@ -595,7 +601,7 @@ def neuro(neuroname):
     fact = ""
     path = [("/" + i) if not (i.startswith("/")) else i for i in path]
     return render_template("neuro.html", title="Нейросети", base=get_base(), path=path, form=form,
-                           name=name, fact=fact)
+                           name=name, neuroname=neuroname)
 
 
 @app.route("/news_delete/<int:id>", methods=["GET", "POST"])

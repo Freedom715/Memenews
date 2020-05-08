@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="col-10">
+<h1>Изменение фотографии</h1>
+<form action="" method="post"  enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    {{ form.csrf_token }}
+    <div class="form-group">
+        <label for="title1">Подпись к фотографии</label>
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" id="title1" aria-label="Подпись"
+                   aria-describedby="basic-addon1" name="title" required
+                   placeholder={{photo.title}} >
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="inputGroupFile03">Выберите файл фотографии</label>
+        <div class="input-group mb-3">
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="inputGroupFile03"
+                       name="images" required>
+                <label class="custom-file-label" for="inputGroupFile03" data-browse="Обзор"
+                       aria-describedby="inputGroupFileAddon02">{{photo.cover}}</label>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <input class="btn btn-primary" type="submit" value="Сохранить фотографию">
+    </div>
+
+</form>
+</div>
+<script>
+bsCustomFileInput.init()
+
+      var btn = document.getElementById('btnResetForm')
+      var form = document.querySelector('form')
+      btn.addEventListener('click', function () {
+        form.reset()
+      })
+</script>
+{% endblock %}

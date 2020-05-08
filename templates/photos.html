@@ -3,9 +3,10 @@
 {% block content %}
 <div>
     <img src="{{photo.cover}}"> <br>
-    {% if user==True %}
+    {% if photo.user == current_user.id %}
     <div class="row justify-content-center">
-        <a href="/photo_delete/{{photo.id}}" class="btn btn-warning">Удалить</a>
+        <a href="/photo_delete/{{photo.id}}" class="btn btn-danger">Удалить</a>
+        <a href="/photo_edit/{{photo.id}}" class="btn btn-secondary">Изменить</a>
     </div>
     {% endif %}
 </div>

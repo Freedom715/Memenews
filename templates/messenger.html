@@ -6,7 +6,7 @@
         <div class="col-xl-100">
             {% for elem in messages %}
             <div class="block">
-                {% if elem.user_from_id == current_user.id and elem.user_to_id == user_to.id %}
+                {% if (elem.user_from_id == current_user.id and elem.user_to_id == user_to.id) or (current_user.id == elem.user_from_id and current_user.id == elem.user_to_id)%}
                 <div class="media">
 
                     <a href="/profile/{{current_user.id}}"><img src="{{current_user.avatar}}"

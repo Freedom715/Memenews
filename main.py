@@ -19,9 +19,9 @@ from wtforms.validators import DataRequired
 import news_resources
 from analize import analyze_image_meme, analyze_image_dog, analyze_image_lion
 from data import db_session
-from data.photos import Photo
 from data.messages import Message
 from data.news import News
+from data.photos import Photo
 from data.users import User
 from functions import check_password, get_time, check_like
 
@@ -182,7 +182,8 @@ def add_photo():
                     user.photos = user.photos.rstrip("'") + ", " + str(photo.id) + "'"
             else:
                 user.photos = str(photo.id)
-            print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "загрузил фото", photo.name)
+            print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+                  "загрузил фото", photo.name)
             session.commit()
             return redirect("/profile")
     return render_template("add_photo.html", title="Добавление фото", form=form, base=get_base())
@@ -208,9 +209,11 @@ def messenger(user_id):
         message.user_to_id = session.query(User).filter(User.id == user_id).first().id
         session.add(message)
         session.commit()
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "отправил сообщение пользователю",
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+              "отправил сообщение пользователю",
               session.query(User).filter(User.id == user_id).first().name)
-        return render_template("messenger.html", base=get_base(), title="Телеграф", messages=messages, user_to=user_to,
+        return render_template("messenger.html", base=get_base(), title="Телеграф",
+                               messages=messages, user_to=user_to,
                                get_time=get_time)
 
 
@@ -241,7 +244,8 @@ def message_delete(id):
     if message:
         session.delete(message)
         session.commit()
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "удалил сообщение", id)
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+              "удалил сообщение", id)
         return redirect(f"/messages/{message.user_to_id}")
     else:
         abort(404)
@@ -276,9 +280,37 @@ def photo_delete(photo_id):
     user_photo = user.photos.strip("'").split(", ")
     user_photo = list(filter(lambda x: x != photo_id, user_photo))
     user.photos = "'" + ", ".join(user_photo) + "'"
-    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "удалил фотографию", photo_id)
+    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "удалил фотографию",
+          photo_id)
     session.commit()
     return redirect(f"/profile")
+
+
+@app.route("/photo_edit/<photo_id>", methods=["GET", "POST"])
+def photo_edit(photo_id): #TODO
+    session = db_session.create_session()
+    form = UsersForm()
+    photo = session.query(Photo).filter(Photo.id == photo_id)
+    if request.method == "GET":
+        return render_template("photo_edit.html", photo=photo, title="Редактирование фотографии",
+                               base=get_base(), form=form)
+    if form.validate_on_submit():
+        photo.name = request.form.get("title")
+        photo.user = current_user.id
+        f = request.files.get("images")
+        if f:
+            filename = secure_filename(f.filename)
+            f.save("static/img/photos/covers/" + filename)
+            photo.cover = url_for("static", filename=f"img/photos/covers/{filename}")
+            photo.photos = url_for("static", filename=f"img/photos/covers/{filename}")
+        else:
+            photo.cover = "/static/img/photos/sample_covers/{}.png".format(
+                choice(["ololo", "trollface", "i_dont_now", "aaaaa"]))
+            photo.photos = ""
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "изменил фото",
+              photo.name)
+        session.commit()
+        return redirect(f"/profile/{current_user.id}")
 
 
 @login_required
@@ -293,7 +325,8 @@ def add_friend(user_id):
             user.friends = "'" + user.friends.strip("'") + ", " + str(user_id) + "'"
         else:
             user.friends = user.friends[:-1] + ", " + str(user_id) + "'"
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "добавил в друзья", user_id)
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+              "добавил в друзья", user_id)
         session.commit()
     url_from = request.args.get('url_from')
     return redirect(url_from)
@@ -345,7 +378,8 @@ def settings():
         elif theme == "3":
             user.theme = 3
 
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "сменил настройки")
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+              "сменил настройки")
         session.commit()
         return redirect(f"/profile/{current_user.id}")
 
@@ -376,7 +410,8 @@ def like_post(news_id):
         user_liked_news = list(filter(lambda x: x != news_id, user_liked_news))
         user.liked_news = "'" + ", ".join(user_liked_news) + "'"
         news.liked -= 1
-    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "лайкнул пост", news_id)
+    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "лайкнул пост",
+          news_id)
     session.commit()
     return redirect("/")
 
@@ -389,7 +424,8 @@ def friend_delete(friend_id):
     user_friends = list(filter(lambda x: x != friend_id, user_friends))
     user.friends = "'" + ", ".join(user_friends) + "'"
     url_from = request.args.get('url_from')
-    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "удалил друга( ", friend_id)
+    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "удалил друга( ",
+          friend_id)
     session.commit()
     return redirect(url_from)
 
@@ -414,9 +450,11 @@ def get_profile(user_id):
         form.friends = []
         form.error = "У этого пользователя еще нет друзей. Напишите ему, может быть вы подружитесь."
     if current_user.is_authenticated:
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "перешел в профиль",
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+              "перешел в профиль",
               user.name, user_id)
-        friends = session.query(User).filter(User.id.in_(current_user.friends.strip("'").split(", "))).all()
+        friends = session.query(User).filter(
+            User.id.in_(current_user.friends.strip("'").split(", "))).all()
         friends_id = [elem.id for elem in friends]
     else:
         friends_id = []
@@ -427,7 +465,8 @@ def get_profile(user_id):
 @login_required
 @app.route("/profile")
 def return_profile():
-    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "перешел в свой профиль")
+    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+          "перешел в свой профиль")
     return redirect(f"/profile/{current_user.id}")
 
 
@@ -453,7 +492,8 @@ def add_news():
             news.image = url_for("static", filename=f"img/images/{filename}")
         session.add(news)
         session.commit()
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "создал пост", news.title, news.id)
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "создал пост",
+              news.title, news.id)
         return redirect("/")
 
 
@@ -486,7 +526,8 @@ def edit_news(id):
                 filename = secure_filename(f.filename)
                 f.save("static/img/images/" + filename)
                 news.image = url_for("static", filename=f"img/images/{filename}")
-            print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "отредактировал новость", id)
+            print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+                  "отредактировал новость", id)
             session.commit()
             return redirect("/")
         else:
@@ -574,7 +615,8 @@ def neuro(neuroname):
         f.write(response.content)
         f.close()
         path[1] = "static/img/neuro/user/tmpcat.jpg"
-    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "воспользовался нейросетью", neuroname)
+    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+          "воспользовался нейросетью", neuroname)
     fact = ""
     path = [("/" + i) if not (i.startswith("/")) else i for i in path]
     return render_template("neuro.html", title="Нейросети", base=get_base(), path=path, form=form,
@@ -588,7 +630,8 @@ def news_delete(id):
     news = session.query(News).filter(News.id == id,
                                       News.user == current_user).first()
     if news:
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "удалил новость", news.title, id)
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "удалил новость",
+              news.title, id)
         session.delete(news)
         session.commit()
     else:
@@ -661,8 +704,9 @@ def register():
         except:
             return render_template("register.html", title="Регистрация",
                                    form=form,
-                                   message="Произошла неизвестная ошибка, связанная с электронной почтой, <br>"
-                                           "проверьте адрес эл. почты или отправьте запрос позже", base=get_base())
+                                   message="Произошла неизвестная ошибка, связанная с электронной почтой, "
+                                           "проверьте адрес эл. почты или отправьте запрос позже",
+                                   base=get_base())
         return render_template("confirm_email.html", title="Регистрация", form=form, base=get_base(),
                                message="")
     elif email_confirmation:
@@ -683,7 +727,8 @@ def register():
             print("ok")
             return redirect("/login")
         else:
-            return render_template("confirm_email.html", title="Регистрация", form=form, base=get_base(),
+            return render_template("confirm_email.html", title="Регистрация", form=form,
+                                   base=get_base(),
                                    message="Коды не совпадают")
     else:
         return render_template("register.html", title="Регистрация", form=form, base=get_base())
@@ -699,7 +744,8 @@ def delete_user(user_id):
     elif form.validate_on_submit():
         if user.check_password(form.password.data):
             if user:
-                print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "молча удалился")
+                print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+                      "молча удалился")
                 user.name = "DELETED"
                 user.status = "Удалён"
                 user.avatar = "/static/img/avatars/no_avatar.png"

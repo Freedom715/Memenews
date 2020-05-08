@@ -681,7 +681,7 @@ def register():
             session.commit()
             email_confirmation = False
             print("ok")
-            return redirect("/")
+            return redirect("/login")
         else:
             return render_template("confirm_email.html", title="Регистрация", form=form, base=get_base(),
                                    message="Коды не совпадают")

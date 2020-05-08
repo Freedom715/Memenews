@@ -14,7 +14,7 @@
         </form>
     </div>
     {% for item in users%}
-    {% if item.name != "DELETED" %}
+    {% if item.name != "DELETED" and item.id != current_user.id%}
     <div class="col-100">
         <div class="block">
             <div class="media">

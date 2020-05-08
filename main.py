@@ -103,9 +103,9 @@ class UsersForm(FlaskForm):
 
 
 class PasswordForm(FlaskForm):
-    old_password = PasswordField("Введите старый пароль")
-    password = PasswordField("Ввведите новый пароль")
-    password_again = PasswordField("Повторите новый пароль")
+    old_password = PasswordField("Введите старый пароль", validators=[DataRequired()])
+    password = PasswordField("Ввведите новый пароль", validators=[DataRequired()])
+    password_again = PasswordField("Повторите новый пароль", validators=[DataRequired()])
     submit = SubmitField("Войти")
 
 
@@ -203,13 +203,21 @@ def messenger(user_id):
     session = db_session.create_session()
     user_to = session.query(User).filter(User.id == user_id).first()
     if request.method == "GET":
-        messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
-                                                     Message.user_to_id == current_user.id))
-        return render_template("messenger.html", base=get_base(), messages=messages, user_to=user_to,
-                               get_time=get_time)
+        messages = session.query(Message).filter(Message.user_from_id == current_user.id,
+                                                     Message.user_to_id == user_id)
+        if messages:
+            last = max([elem.id for elem in messages])
+        else:
+            last = 0
+        return render_template(f"messenger.html", base=get_base(), messages=messages, user_to=user_to,
+                               get_time=get_time, last=last)
     elif request.method == "POST":
-        messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
-                                                     Message.user_to_id == current_user.id))
+        messages = session.query(Message).filter(Message.user_from_id == current_user.id,
+                                                     Message.user_to_id == user_id)
+        if messages:
+            last = max([elem.id for elem in messages])
+        else:
+            last = False
         text = request.form.get("text")
         message = Message()
         message.text = text
@@ -220,9 +228,10 @@ def messenger(user_id):
         print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
               "отправил сообщение пользователю",
               session.query(User).filter(User.id == user_id).first().name)
-        return render_template("messenger.html", base=get_base(), title="Телеграф",
-                               messages=messages, user_to=user_to,
-                               get_time=get_time)
+        if last:
+            return redirect(f"/messages/{user_id}#{last}")
+        else:
+            return redirect(f"/messages/{user_id}")
 
 
 @app.route("/messages")
@@ -251,12 +260,18 @@ def message_delete(id):
     session = db_session.create_session()
     message = session.query(Message).filter(Message.id == id,
                                             Message.user_from_id == current_user.id).first()
+    messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
+                                                     Message.user_to_id == current_user.id))
+    if messages:
+        last = max([elem.id for elem in messages])
+    else:
+        last = 0
     if message:
         session.delete(message)
         session.commit()
         print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
               "удалил сообщение", id)
-        return redirect(f"/messages/{message.user_to_id}")
+        return redirect(f"/messages/{message.user_to_id}#{last}")
     else:
         abort(404)
 
@@ -374,7 +389,7 @@ def like_post(news_id):
     print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "лайкнул пост",
           news_id)
     session.commit()
-    return redirect("/")
+    return redirect(f"/#{news_id}")
 
 
 @app.route("/friend_delete/<friend_id>", methods=["GET", "POST"])
@@ -513,7 +528,7 @@ def get_people():
                 User.id.in_(current_user.friends.strip("'").split(", "))).filter(
                 User.name.like(f"%{find_string}%")).all())
         else:
-            users = session.query(User).all()
+            users = set(session.query(User).all())
     users -= friends
     return render_template("people.html", form=form, users=users, title="Люди", base=get_base(),
                            friends=friends)
@@ -624,14 +639,18 @@ def password_reset():
     print(url_from)
     if url_from == '/settings':
         if request.method == "GET":
-            return render_template("password_reset.html", base=get_base(), form=form)
+            return render_template("password_reset.html", base=get_base(), form=form, title="Смена пароля")
         if request.method == "POST":
+            if check_password(form.password.data):
+                return render_template("password_reset.html", title="Смена пароля",
+                                       form=form, message=check_password(form.password.data),
+                                       base=get_base())
             if not current_user.check_password(request.form.get("old_password")):
                 return render_template("password_reset.html", base=get_base(), form=form,
-                                       message="Неверный пароль")
+                                       message="Неверный пароль", title="Смена пароля")
             if form.password.data != form.password_again.data:
                 return render_template("password_reset.html", base=get_base(), form=form,
-                                       message="Пароли не совпадают")
+                                       message="Пароли не совпадают", title="Смена пароля")
             print(current_user, form.password.data)
             password = form.password.data
             user = session.query(User).filter(User.id == current_user.id).first()

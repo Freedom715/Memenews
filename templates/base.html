@@ -36,11 +36,13 @@
     .div1 {
     margin: 2.0em 2.0em 0em;}
 
+    .main {margin-top: 80px}
+
     </style>
 </head>
 <body>
 <header>
-    <nav class="navbar navbar-dark bg-dark">
+    <nav class="navbar navbar-dark bg-dark fixed-top">
         <a class="navbar-brand" href="/">Лента</a>
         {% if current_user.is_authenticated %}
         <a class="navbar-brand" href="/messages">Телеграф</a>
@@ -61,7 +63,7 @@
 </header>
 <!-- Begin page content -->
 <main role="main" class="container-fluid">
-    <div class="row justify-content-center">
+    <div class="row justify-content-center main">
         {% block content %}{% endblock %}
     </div>
 </main>

@@ -5,7 +5,6 @@ months = {1: "Января", 2: "Февраля", 3: "Марта", 4: "Апре�
 
 
 def check_like(news_id, lst):
-    print(news_id, lst)
     return '_put' if str(news_id) in lst else ''
 
 

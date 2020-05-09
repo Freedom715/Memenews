@@ -61,6 +61,7 @@ class BaseForm(FlaskForm):
     back_color = "#646464"
     font_white = "white"
     js_for_files = ""
+    favicon = ""
 
 
 class RegisterForm(FlaskForm):
@@ -146,7 +147,7 @@ def get_base():
         base.text_color = "black"
         base.back = "#0a0a0a"
         base.back_color = "#969696"
-    base.js_for_files = url_for("static", filename="js/bs-custom-file-input.js")
+    base.js_for_files = url_for("index", filename="js/bs-custom-file-input.js")
     return base
 
 
@@ -248,7 +249,7 @@ def messages():
         or_(Message.user_from_id == current_user.id, Message.user_to_id == current_user.id)).all()
     people_id = []
     people = []
-    print([elem.id for elem in messages])
+    # print([elem.id for elem in messages])
     for elem in messages:
         if elem.user_to_id not in people_id:
             people.append(session.query(User).filter(User.id == elem.user_to_id).first())
@@ -330,7 +331,6 @@ def photo_edit(photo_id):
         photo.user = current_user.id
         f = request.files.get("images")
         if f:
-            print("ok")
             filename = secure_filename(f.filename)
             f.save("static/img/photos/covers/" + filename)
             photo.cover = url_for("static", filename=f"img/photos/covers/{filename}")
@@ -610,6 +610,11 @@ def news_delete(id):
     session = db_session.create_session()
     news = session.query(News).filter(News.id == id,
                                       News.user == current_user).first()
+    news_all = session.query(News).filter(News.user == current_user).all()
+    if len(news_all) >= 2:
+        redirect_to = news_all[news_all.index(news) - 1].id
+    else:
+        redirect_to = 0
     if news:
         print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "удалил новость",
               news.title, id)
@@ -617,7 +622,7 @@ def news_delete(id):
         session.commit()
     else:
         abort(404)
-    return redirect("/")
+    return redirect(f"/#{redirect_to}")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -642,7 +647,6 @@ def password_reset():
     session = db_session.create_session()
     form = PasswordForm()
     url_from = request.args.get('url_from')
-    print(url_from)
     if url_from == '/settings':
         if request.method == "GET":
             return render_template("password_reset.html", base=get_base(), form=form, title="Смена пароля")
@@ -671,7 +675,6 @@ def settings():
     session = db_session.create_session()
     user = session.query(User).filter(User.id == current_user.id).first()
     if request.method == "GET":
-        print(user.status)
         return render_template("settings.html", title="Параметры", base=get_base(),
                                user=user)
     elif request.method == "POST":
@@ -694,7 +697,6 @@ def settings():
             filename = secure_filename(f.filename)
             f.save("static/img/avatars/" + filename)
             name = analyze_image_meme("static/img/avatars/" + filename)
-            print("Вы очень похожи на", name)
             user.avatar = url_for("static", filename=f"img/avatars/{filename}")
         if theme == "0":
             user.theme = 0
@@ -749,7 +751,6 @@ def register():
         name = form.name.data
         email = form.email.data
         password = form.password.data
-        print("ok")
         status = form.status.data
         key = randint(100000, 999999)
         try:
@@ -779,7 +780,6 @@ def register():
             session.add(user)
             session.commit()
             email_confirmation = False
-            print("ok")
             return redirect("/login")
         else:
             return render_template("confirm_email.html", title="Регистрация", form=form,
@@ -871,4 +871,4 @@ def session_test():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", debug=True)
+    app.run(debug=True)

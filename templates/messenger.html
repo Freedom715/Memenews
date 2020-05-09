@@ -2,58 +2,59 @@
 
 {% block content %}
 <div class="col-xl messenger">
-    <form action="" method="post" enctype="multipart/form-data">
-        {% for elem in messages %}
-        <div class="block rounded-lg">
-            {% if (elem.user_from_id == current_user.id and elem.user_to_id == user_to.id) or (current_user.id ==
-            elem.user_from_id and current_user.id == elem.user_to_id)%}
-            <div class="media">
-                <a href="/profile/{{current_user.id}}" name="{{elem.id}}">
-                    <img src="{{current_user.avatar}}"
-                         class="align-self-center mr-3 rounded-lg"
-                         alt="PEP8"
-                         width="100"
-                         height="100"
-                         title="{{current_user.name}}"></a>
-                <div class="media-body md-0 ">
-                    <h5>{{current_user.name}}</h5>
-                    <p class="text-break">
-                        {{elem.text }} <br>
-                        {{get_time(elem.time.date(), elem.time.time())}}<br>
+
+    {% for elem in messages %}
+    <div class="block rounded-lg">
+        {% if (elem.user_from_id == current_user.id and elem.user_to_id == user_to.id) or (current_user.id ==
+        elem.user_from_id and current_user.id == elem.user_to_id)%}
+        <div class="media">
+            <a href="/profile/{{current_user.id}}" name="{{elem.id}}">
+                <img src="{{current_user.avatar}}"
+                     class="align-self-center mr-3 rounded-lg"
+                     alt="PEP8"
+                     width="100"
+                     height="100"
+                     title="{{current_user.name}}"></a>
+            <div class="media-body md-0 ">
+                <h5>{{current_user.name}}</h5>
+                <p class="text-break">
+                    {{elem.text }} <br>
+                    {{get_time(elem.time.date(), elem.time.time())}}<br>
                     <a href="/message_delete/{{ elem.id }}" class="btn-sm btn-danger">Удалить</a>
-                </div>
             </div>
-            {% endif %}
-            {% if elem.user_to_id == current_user.id and elem.user_from_id == user_to.id %}
-            <div class="media">
-                <div class="media-body md-0">
-                    <h5 align="right">{{user_to.name}}</h5>
-                    <p class="text-break text-right">
-                        {{elem.text }} <br>
-                        {{get_time(elem.time.date(), elem.time.time())}}
-                    </p>
-                </div>
-                <a href="/profile/{{user_to.id}}">
-                    <img src="{{user_to.avatar}}"
-                         class="align-self-center mr-3" alt="PEP8"
-                         width="100"
-                         height="100"
-                         title="{{user_to.name}}"
-                         hspace="20"></a>
-            </div>
-            {% endif %}
         </div>
-        {% endfor %}
-    </form>
+        {% endif %}
+        {% if elem.user_to_id == current_user.id and elem.user_from_id == user_to.id %}
+        <div class="media">
+            <div class="media-body md-0">
+                <h5 align="right">{{user_to.name}}</h5>
+                <p class="text-break text-right">
+                    {{elem.text }} <br>
+                    {{get_time(elem.time.date(), elem.time.time())}}
+                </p>
+            </div>
+            <a href="/profile/{{user_to.id}}">
+                <img src="{{user_to.avatar}}"
+                     class="align-self-center mr-3" alt="PEP8"
+                     width="100"
+                     height="100"
+                     title="{{user_to.name}}"
+                     hspace="20"></a>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
 </div>
 <div class="container-sm mx-auto fixed-bottom">
-    <div class="input-group mb-3">
-        <input type="text" class="form-control" placeholder="Наберите сообщение"
-               aria-label="Наберите сообщение" aria-describedby="button-addon2" name="text">
-        <div class="input-group-append">
-            <input class="btn btn-primary" type="submit" value="Отправить">
+    <form action="" method="post" enctype="multipart/form-data">
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="Наберите сообщение"
+                   aria-label="Наберите сообщение" aria-describedby="button-addon2" name="text">
+            <div class="input-group-append">
+                <input class="btn btn-primary" type="submit" value="Отправить">
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
 <script> $(function(){ window.location.hash = {{last}}; }); </script>

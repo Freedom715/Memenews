@@ -3,48 +3,7 @@
 {% block content %}
 <!--<meta http-equiv="Refresh" content="1"/>-->
 <div class="col-xl messenger" id="mess">
-
-    {% for elem in messages %}
-    <div class="block rounded-lg">
-        {% if (elem.user_from_id == current_user.id and elem.user_to_id == user_to.id) or (current_user.id ==
-        elem.user_from_id and current_user.id == elem.user_to_id)%}
-        <div class="media">
-            <a href="/profile/{{current_user.id}}" name="{{elem.id}}">
-                <img src="{{current_user.avatar}}"
-                     class="align-self-center mr-3 rounded-lg"
-                     alt="PEP8"
-                     width="100"
-                     height="100"
-                     title="{{current_user.name}}"></a>
-            <div class="media-body md-0 ">
-                <h5>{{current_user.name}}</h5>
-                <p class="text-break">
-                    {{elem.text }} <br>
-                    {{get_time(elem.time.date(), elem.time.time())}}<br>
-                    <a href="/message_delete/{{ elem.id }}" class="btn-sm btn-danger">Удалить</a>
-            </div>
-        </div>
-        {% endif %}
-        {% if elem.user_to_id == current_user.id and elem.user_from_id == user_to.id %}
-        <div class="media">
-            <div class="media-body md-0">
-                <h5 align="right">{{user_to.name}}</h5>
-                <p class="text-break text-right">
-                    {{elem.text }} <br>
-                    {{get_time(elem.time.date(), elem.time.time())}}
-                </p>
-            </div>
-            <a href="/profile/{{user_to.id}}">
-                <img src="{{user_to.avatar}}"
-                     class="align-self-center mr-3" alt="PEP8"
-                     width="100"
-                     height="100"
-                     title="{{user_to.name}}"
-                     hspace="20"></a>
-        </div>
-        {% endif %}
-    </div>
-    {% endfor %}
+    <div id="test"></div>
 </div>
 <div class="container-sm mx-auto fixed-bottom">
     <form action="" method="post" enctype="multipart/form-data">
@@ -57,18 +16,104 @@
         </div>
     </form>
 </div>
+
 <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
-<script> $(function(){ window.location.hash = {{last}}; }); </script>
+<!--<script> $(function(){ window.location.hash = {{last}}; }); </script>-->
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
 <script type="text/javascript">
-function mode() {
-    $.ajax({
-        url: 'messenger.html',
-        success: function(data) {
-            $('#mess');
-        }
-    });
+function get_time(time) {
+    var time_input = time.split(" ")[1]
+    var date_input = time.split(" ")[0]
+    var months = {1: "Января", 2: "Февраля", 3: "Марта", 4: "Апреля", 5: "Мая", 6: "Июня", 7: "Июля",
+          8: "Августа", 9: "Сентября", 10: "Октября", 11: "Ноября", 12: "Декабря"};
+    var year = Number(String(date_input).split("-")[0]);
+    var month = Number(String(date_input).split("-")[1]);
+    var day = Number(String(date_input).split("-")[2]);
+    var current_date_time = new Date();
+    if (day == current_date_time.getDate()){
+        return ("Сегодня в " + String(time_input).split(".")[0]);}
+    else if ((day + 1) == current_date_time.getDate()){
+        return ("Вчера в " + String(time_input).split(".")[0]);}
+    else{
+        return (String(day) + " " + months[Number(month)] + " " + String(year) + " в " + String(time_input).split(".")[0]);}
 };
-setInterval(mode, 3000);
+function mode() {
+var form = document.getElementById("mess");
+var ma = 0;
+    $.ajax({
+            url: '/api/v2/messages',
+            type: 'GET',
+            dataType : "json",
+            success: function(messages) {
+            form.innerHTML = "";
+            $.each(messages.messages, function(i, val) {
+                if (val.user_from_id == {{current_user.id}} && val.user_to_id == {{user_to.id}}) {
+                    var img = document.createElement("img");
+                    img.src = "{{current_user.avatar}}";
+                    img.className = "align-self-center mr-3 rounded-lg";
+                    img.alt = "PEP8";
+                    img.width = "100";
+                    img.height = "100";
+                    img.title = "{{current_user.name}}";
+                    img.name = val.id;
+                    var message = document.createElement("div");
+                    message.className = "media block rounded-lg";
+                    var media_block = document.createElement("div");
+                    media_block.className = "media-body"
+                    media_block.innerHTML = '<h5 class="mt-0">{{current_user.name}}</h5>';
+                    var text = document.createElement("p");
+                    text.className = "text-break";
+                    text.innerHTML = val.text;
+                    media_block.appendChild(text);
+                    var button = document.createElement("a");
+                    button.className = "btn-sm btn-danger";
+                    button.text = "Удалить";
+                    button.href="/message_delete/" + val.id;
+                    media_block.appendChild(document.createTextNode(get_time(val.time)));
+                    media_block.appendChild(document.createElement("br"));
+                    media_block.appendChild(button);
+                    media_block.appendChild(document.createElement("br"));
+                    message.appendChild(img);
+                    message.appendChild(media_block);
+                    form.appendChild(message)
+                    if (val.id > ma) {ma = val.id}
+                } else if (val.user_to_id == {{current_user.id}} && val.user_from_id == {{user_to.id}}){
+                    var img = document.createElement("img");
+                    img.src = "{{user_to.avatar}}";
+                    img.className = "align-self-center mr-3 rounded-lg";
+                    img.alt = "PEP8";
+                    img.width = "100";
+                    img.height = "100";
+                    img.title = "{{user_to.name}}";
+                    img.hspace= "20";
+                    img.name = val.id;
+                    var message = document.createElement("div");
+                    message.className = "media block rounded-lg";
+                    var media_block = document.createElement("div");
+                    media_block.className = "media-body"
+                    media_block.innerHTML = '<h5 class="mt-0" align="right">{{user_to.name}}</h5>';
+                    var text = document.createElement("p");
+                    text.className = "text-break text-right";
+                    text.innerHTML = val.text + "<br>";
+                    text.appendChild(document.createTextNode(get_time(val.time)));
+                    media_block.appendChild(text);
+                    media_block.appendChild(document.createElement("br"));
+                    media_block.appendChild(document.createElement("br"));
+                    message.appendChild(media_block);
+                    message.appendChild(img);
+                    form.appendChild(message)
+                    if (val.id > ma) {ma = val.id}
+                }
+<!--                alert(i);-->
+                });
+                $(function(){ window.location.hash = ma; });
+                }
+                });
+
+
+
+};
+mode();
+setInterval(mode, 4000);
 </script>
 {% endblock %}

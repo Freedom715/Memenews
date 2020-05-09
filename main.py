@@ -17,6 +17,7 @@ from wtforms import StringField, PasswordField, SubmitField, TextAreaField, Bool
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 
+import messages_resources
 import news_resources
 from analize import analyze_image_meme, analyze_image_dog, analyze_image_lion
 from data import db_session
@@ -45,6 +46,9 @@ db_session.global_init("db/Memenews.sqlite")
 # app.register_blueprint(news_api.blueprint)
 api.add_resource(news_resources.NewsListResource, "/api/v2/news")
 api.add_resource(news_resources.NewsResource, "/api/v2/news/<int:news_id>")
+api.add_resource(messages_resources.MessagesListResource, "/api/v2/messages")
+api.add_resource(messages_resources.MessagesResource, "/api/v2/messages/<int:message_id>")
+
 
 email_confirmation = False
 name = ""
@@ -108,6 +112,10 @@ class PasswordForm(FlaskForm):
     password = PasswordField("Ввведите новый пароль", validators=[DataRequired()])
     password_again = PasswordField("Повторите новый пароль", validators=[DataRequired()])
     submit = SubmitField("Войти")
+
+
+class MessagesForm(FlaskForm):
+    messages = []
 
 
 def choice_name():
@@ -198,6 +206,17 @@ def add_photo():
     return render_template("add_photo.html", title="Добавление фото", form=form, base=get_base())
 
 
+def get_messages(user_id):
+    session = db_session.create_session()
+    user_to = session.query(User).filter(User.id == user_id).first()
+    messages = [elem for elem in session.query(Message).filter(Message.user_from_id == current_user.id,
+                                                               Message.user_to_id == user_id)]
+    messages += [elem for elem in session.query(Message).filter(Message.user_to_id == current_user.id,
+                                                                Message.user_from_id == user_id)]
+    messages.sort(key=lambda elem: elem.id)
+    return messages
+
+
 @app.route("/messages/<user_id>", methods=["GET", "POST"])
 @login_required
 def messenger(user_id):
@@ -208,19 +227,19 @@ def messenger(user_id):
                                                                    Message.user_to_id == user_id)]
         messages += [elem for elem in session.query(Message).filter(Message.user_to_id == current_user.id,
                                                                     Message.user_from_id == user_id)]
-
+        messages.sort(key=lambda elem: elem.id)
         if not messages == []:
             last = max([elem.id for elem in messages])
         else:
             last = 0
         return render_template(f"messenger.html", base=get_base(), messages=messages, user_to=user_to,
-                               get_time=get_time, last=last)
+                               get_time=get_time, last=last, now=datetime.datetime.now())
     elif request.method == "POST":
         messages = [elem for elem in session.query(Message).filter(Message.user_from_id == current_user.id,
                                                                    Message.user_to_id == user_id)]
         messages += [elem for elem in session.query(Message).filter(Message.user_to_id == current_user.id,
                                                                     Message.user_from_id == user_id)]
-
+        messages.sort(key=lambda elem: elem.id)
         if not messages == []:
             last = max([elem.id for elem in messages])
         else:
@@ -830,6 +849,7 @@ def logout():
 def favicon():
     return send_from_directory(app.root_path,
                                'favicon.ico', mimetype='image/ico')
+
 
 @app.route("/")
 def index():

@@ -19,6 +19,7 @@ def check_password(password):
 
 
 def get_time(date_input, time_input):
+    print(date_input, time_input)
     year, month, day = str(date_input).split("-")
     date = datetime.date(int(year), int(month), int(day))
     current_date_time = datetime.datetime.now()

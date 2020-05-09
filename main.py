@@ -3,7 +3,7 @@ import os
 from random import choice, randint
 
 import requests
-from flask import Flask, render_template, redirect, request, make_response, session, url_for
+from flask import Flask, render_template, redirect, request, make_response, session, url_for, send_from_directory
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_mail import Mail
 from flask_mail import Message as FlaskMessage
@@ -825,6 +825,11 @@ def logout():
     logout_user()
     return redirect("/")
 
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(app.root_path,
+                               'favicon.ico', mimetype='image/ico')
 
 @app.route("/")
 def index():

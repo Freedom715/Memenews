@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="col-xl messenger">
+<!--<meta http-equiv="Refresh" content="1"/>-->
+<div class="col-xl messenger" id="mess">
 
     {% for elem in messages %}
     <div class="block rounded-lg">
@@ -58,4 +59,16 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
 <script> $(function(){ window.location.hash = {{last}}; }); </script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+<script type="text/javascript">
+function mode() {
+    $.ajax({
+        url: 'messenger.html',
+        success: function(data) {
+            $('#mess');
+        }
+    });
+};
+setInterval(mode, 3000);
+</script>
 {% endblock %}

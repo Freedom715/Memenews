@@ -8,9 +8,9 @@
             <img src={{path[1]}} width="300" height="300" class="rounded-lg">
         </div>
         <br>
-        <h2 align="center">{{name}}</h2>
+        <h2 align="center" class="horizontal_block">{{name}}</h2>
     </div>
-    <div class="neuro_buttons">
+    <div class="horizontal_block">
         <form method="post" enctype="multipart/form-data">
             {{ form.hidden_tag() }}
             <div class="col-xl block rounded-lg mx-auto">
@@ -41,7 +41,7 @@
                 <br>
                 {% endif %}
                 {% if neuroname == "random_cat" %}
-                <a href="/neuro/random_cat" class="btn btn-success btn-lg btn-block">Рандомные киски</a><br>
+                <a href="/neuro/random_cat" class="btn btn-success btn-lg btn-block">Случайные кошки</a><br>
                 {% else %}
                 <a href="/neuro/random_cat" class="btn btn-secondary btn-lg btn-block">Случайные кошки</a>
                 <br>

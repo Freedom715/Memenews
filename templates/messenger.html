@@ -9,7 +9,7 @@
     <form action="" method="post" enctype="multipart/form-data">
         <div class="input-group mb-3">
             <input type="text" class="form-control" placeholder="Наберите сообщение"
-                   aria-label="Наберите сообщение" aria-describedby="button-addon2" name="text">
+                   aria-label="Наберите сообщение" aria-describedby="button-addon2" name="text" id="textInput">
             <div class="input-group-append">
                 <input class="btn btn-primary" type="submit" value="Отправить">
             </div>
@@ -40,6 +40,7 @@ function get_time(time) {
 function mode() {
 var form = document.getElementById("mess");
 var ma = 0;
+var input = document.getElementById("textInput");
     $.ajax({
             url: '/api/v2/messages',
             type: 'GET',
@@ -114,6 +115,7 @@ var ma = 0;
 <!--                alert(i);-->
                 });
                 $(function(){ window.location.hash = ma; });
+                input.focus();
                 }
                 });
 

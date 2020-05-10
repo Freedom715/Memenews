@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div>
-    <a href="/profile/{{photo.user}}" class="btn btn-secondary btn-block">Назад</a><br>
-    <img src="{{photo.cover}}"> <br>
+<div class="col-xl mx-auto">
+    <a href="/profile/{{photo.user}}" class="btn btn-secondary btn" style="margin-bottom:10px">Назад</a><br>
+    <img src="{{photo.cover}}" class="img-fluid"> <br>
     {% if photo.user == current_user.id %}
-    <div class="row justify-content-center">
-        <a href="/photo_delete/{{photo.id}}" class="btn btn-danger">Удалить</a>
-        <a href="/photo_edit/{{photo.id}}" class="btn btn-secondary">Изменить</a>
+    <div class="row justify-content-around" style="margin-top:10px">
+        <a href="/photo_delete/{{photo.id}}" class="btn btn-danger btn-lg">Удалить</a>
+        <a href="/photo_edit/{{photo.id}}" class="btn btn-warning btn-lg">Изменить</a>
     </div>
     {% endif %}
 </div>

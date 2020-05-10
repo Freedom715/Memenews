@@ -4,37 +4,40 @@
 <div class="col-xl block rounded-lg">
     <div class="row">
         <div class="col-xl rounded-lg">
-            <div class="media">
+            <div class="row horizontal_block">
                 <img src={{form.user.avatar}}
                      class="align-self-start mr-3 rounded-lg"
                      alt={{form.user.name}}
                      width="200"
                      height="200" onclick="">
-                <div class="media-body">
-                    <h1 class="mt-0">{{form.user.name}}</h1>
-                    <p>Статус: {{form.user.status}}</p>
-                    {% if form.user.name != "DELETED" %}
-                    {% if current_user.is_authenticated %}
-                    {% if form.user.id == current_user.id %}
-                    <a href="/settings" class="btn btn-secondary">Настройки</a>
-                    <a href="/logout" class="btn btn-warning">Выход</a>
-                    {% else %}
-                    {% if form.user.id in friends_id %}
-                    <a href="/friend_delete/{{ form.user.id }}?url_from=/profile/{{form.user.id}}"
-                       class="btn btn-secondary">Порвать
-                        отношения</a>
-                    {% else %}
-                    <a href="/add_friend/{{form.user.id}}?url_from=/profile/{{form.user.id}}" class="btn btn-warning">
-                        Добавить
-                        в
-                        друзья </a>
-                    {% endif %}
-                    {% endif %}
-                    {% endif %}
-                    {% endif %}
-
+                <div class="media">
+                    <div class="media-body">
+                        <h1 class="mt-0">{{form.user.name}}</h1>
+                        <p class="text-break">Статус: {{form.user.status}}</p>
+                        {% if form.user.name != "DELETED" %}
+                        {% if current_user.is_authenticated %}
+                        {% if form.user.id == current_user.id %}
+                        <a href="/settings" class="btn btn-secondary">Настройки</a>
+                        <a href="/logout" class="btn btn-warning">Выход</a>
+                        {% else %}
+                        {% if form.user.id in friends_id %}
+                        <a href="/friend_delete/{{ form.user.id }}?url_from=/profile/{{form.user.id}}"
+                           class="btn btn-secondary">Порвать
+                            отношения</a>
+                        {% else %}
+                        <a href="/add_friend/{{form.user.id}}?url_from=/profile/{{form.user.id}}"
+                           class="btn btn-warning">
+                            Добавить
+                            в
+                            друзья </a>
+                        {% endif %}
+                        {% endif %}
+                        {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
+
             {% if form.user.name != "DELETED" %}
             <h2> Друзья</h2>
             {% if form.error == '' %}
@@ -61,7 +64,7 @@
             {% endif %}
             {% endif %}
         </div>
-        <div class = "horizontal_block">
+        <div class="horizontal_block">
             <h2> Фотографии</h2>
             <ul>
                 {% for item in photo %}

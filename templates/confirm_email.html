@@ -5,11 +5,13 @@
     <h1>Подтверждение электронной почты</h1>
     <form action="" method="post">
         <h5>На указанную почту было отправлено письмо с кодом, введите код в
-        поле ниже для продолжения регистрации</h5>
+            поле ниже для продолжения регистрации</h5>
         {{ form.key.label }}<br>
         {{ form.key(class="form-control") }}<br>
-        {{ form.submit_email(type="submit", class="btn btn-primary") }}
-        <a href="/register?cancel=True" class="btn btn-danger btn-lg">Отмена регистрации</a>
+        <div class="row justify-content-around">
+            {{ form.submit_email(type="submit", class="btn btn-lg btn-primary") }}
+            <a href="/register?cancel=True" class="btn btn-danger btn-lg">Отмена регистрации</a>
+        </div>
         {% if message %}
         <p>{{message}}</p>
         {% endif %}

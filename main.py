@@ -777,6 +777,10 @@ def register():
             return render_template("register.html", title="Регистрация",
                                    form=form,
                                    message="Введите имя пользователя", base=get_base())
+        if form.name.data == "DELETED":
+            return render_template("register.html", title="Регистрация",
+                                   form=form,
+                                   message="Это зарезервированное имя, его испольовать нельзя", base=get_base())
         email_confirmation = True
         name = form.name.data
         email = form.email.data
@@ -908,4 +912,4 @@ def session_test():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", debug=True)

@@ -74,7 +74,7 @@ class RegisterForm(FlaskForm):
     password_again = PasswordField("Повторите пароль")
     name = StringField("Имя пользователя")
     status = TextAreaField("Немного о себе")
-    submit = SubmitField("Отправить проверочное сообщение на указанную почту")
+    submit = SubmitField("Отправить проверочное сообщение")
     submit_email = SubmitField("Зарегистрироваться")
     key = StringField("Введите проверочный код")
 

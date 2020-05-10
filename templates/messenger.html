@@ -22,20 +22,23 @@
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
 <script type="text/javascript">
 function get_time(time) {
-    var time_input = time.split(" ")[1]
-    var date_input = time.split(" ")[0]
+    var time_input = time.split(" ")[1];
+    var date_input = time.split(" ")[0];
+
     var months = {1: "Января", 2: "Февраля", 3: "Марта", 4: "Апреля", 5: "Мая", 6: "Июня", 7: "Июля",
           8: "Августа", 9: "Сентября", 10: "Октября", 11: "Ноября", 12: "Декабря"};
     var year = Number(String(date_input).split("-")[0]);
     var month = Number(String(date_input).split("-")[1]);
     var day = Number(String(date_input).split("-")[2]);
     var current_date_time = new Date();
+    var minute = Number(String(time_input).split(":")[0]);
+    var second = Number(String(time_input).split(":")[1]);
     if (day == current_date_time.getDate()){
-        return ("Сегодня в " + String(time_input).split(".")[0]);}
+        return ("Сегодня в " + [ minute, second ].join(":"))}
     else if ((day + 1) == current_date_time.getDate()){
-        return ("Вчера в " + String(time_input).split(".")[0]);}
+        return ("Вчера в " + [ minute, second ].join(":"))}
     else{
-        return (String(day) + " " + months[Number(month)] + " " + String(year) + " в " + String(time_input).split(".")[0]);}
+        return (String(day) + " " + months[Number(month)] + " " + String(year) + " в " + [minute, second].join(":"))}
 };
 function mode() {
 var form = document.getElementById("mess");
@@ -123,6 +126,6 @@ var input = document.getElementById("textInput");
 
 };
 mode();
-setInterval(mode, 4000);
+setInterval(mode, 3000);
 </script>
 {% endblock %}

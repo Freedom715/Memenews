@@ -30,13 +30,14 @@ def check_password(password):
 
 
 def get_time(date_input, time_input):
-    print(date_input, time_input)
     year, month, day = str(date_input).split("-")
     date = datetime.date(int(year), int(month), int(day))
     current_date_time = datetime.datetime.now()
+    hour, minute, second = str(time_input).split(".")[0].split(":")
+    hour = str(int(hour) + 3)
     if date.day == current_date_time.day:
-        return "Сегодня в " + str(time_input).split(".")[0]
+        return "Сегодня в " + ":".join([hour, minute])
     elif date.day + 1 == current_date_time.day:
-        return "Вчера в " + str(time_input).split(".")[0]
+        return "Вчера в " + ":".join([hour, minute])
     else:
-        return day + " " + months[int(month)] + " " + year + " в " + str(time_input).split(".")[0]
+        return day + " " + months[int(month)] + " " + year + " в " + ":".join([hour, minute])

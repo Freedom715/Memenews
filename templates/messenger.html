@@ -48,6 +48,9 @@ var ma = 0;
             form.innerHTML = "";
             $.each(messages.messages, function(i, val) {
                 if (val.user_from_id == {{current_user.id}} && val.user_to_id == {{user_to.id}}) {
+                    var ref = document.createElement("a");
+                    ref.href = "/profile/{{current_user.id}}";
+                    ref.name = val.id;
                     var img = document.createElement("img");
                     img.src = "{{current_user.avatar}}";
                     img.className = "align-self-center mr-3 rounded-lg";
@@ -56,6 +59,7 @@ var ma = 0;
                     img.height = "100";
                     img.title = "{{current_user.name}}";
                     img.name = val.id;
+                    ref.appendChild(img);
                     var message = document.createElement("div");
                     message.className = "media block rounded-lg";
                     var media_block = document.createElement("div");
@@ -73,11 +77,14 @@ var ma = 0;
                     media_block.appendChild(document.createElement("br"));
                     media_block.appendChild(button);
                     media_block.appendChild(document.createElement("br"));
-                    message.appendChild(img);
+                    message.appendChild(ref);
                     message.appendChild(media_block);
                     form.appendChild(message)
                     if (val.id > ma) {ma = val.id}
                 } else if (val.user_to_id == {{current_user.id}} && val.user_from_id == {{user_to.id}}){
+                    var ref = document.createElement("a");
+                    ref.href = "/profile/{{current_user.id}}";
+                    ref.name = val.id;
                     var img = document.createElement("img");
                     img.src = "{{user_to.avatar}}";
                     img.className = "align-self-center mr-3 rounded-lg";
@@ -86,7 +93,7 @@ var ma = 0;
                     img.height = "100";
                     img.title = "{{user_to.name}}";
                     img.hspace= "20";
-                    img.name = val.id;
+                    ref.appendChild(img);
                     var message = document.createElement("div");
                     message.className = "media block rounded-lg";
                     var media_block = document.createElement("div");
@@ -100,7 +107,7 @@ var ma = 0;
                     media_block.appendChild(document.createElement("br"));
                     media_block.appendChild(document.createElement("br"));
                     message.appendChild(media_block);
-                    message.appendChild(img);
+                    message.appendChild(ref);
                     form.appendChild(message)
                     if (val.id > ma) {ma = val.id}
                 }

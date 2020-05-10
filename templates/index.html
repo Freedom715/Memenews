@@ -31,7 +31,7 @@
                     <a href="/like_post/{{ item.id }}"> <img
                             src="/static/img/images/{{ base.like_image }}{{ check_like(item.id, lst) }}.png"
                             width="100" height="100"></a>
-                    <p>Одобрили {{item.liked}} человек
+                    <p>{{check_number_of_like(item.liked)[0].title()}} {{item.liked}} {{check_number_of_like(item.liked)[1]}}
                 </div>
                 {% endif %}
                 {% if current_user == item.user %}

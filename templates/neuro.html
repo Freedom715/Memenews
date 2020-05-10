@@ -40,6 +40,12 @@
                     собачка?</a>
                 <br>
                 {% endif %}
+                {% if neuroname == "random_cat" %}
+                <a href="/neuro/random_cat" class="btn btn-success btn-lg btn-block">Рандомные киски</a><br>
+                {% else %}
+                <a href="/neuro/random_cat" class="btn btn-secondary btn-lg btn-block">Случайные кошки</a>
+                <br>
+                {% endif %}
                 <div class="form-group">
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">

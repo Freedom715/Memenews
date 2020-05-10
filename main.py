@@ -25,7 +25,7 @@ from data.messages import Message
 from data.news import News
 from data.photos import Photo
 from data.users import User
-from functions import check_password, get_time, check_like
+from functions import check_password, get_time, check_like, check_number_of_like
 
 app = Flask(__name__)
 api = Api(app)
@@ -537,19 +537,22 @@ def edit_news(id):
                            base=get_base())
 
 
-@login_required
 @app.route("/people", methods=["GET", "POST"])
 def get_people():
     form = UsersForm()
     session = db_session.create_session()
     users = set(session.query(User))
-    friends = set(session.query(User).filter(
-        User.id.in_(current_user.friends.strip("'").split(", "))).all())
+    if current_user.is_authenticated:
+        friends = set(session.query(User).filter(
+            User.id.in_(current_user.friends.strip("'").split(", "))).all())
+    else:
+        friends = set()
     if form.validate_on_submit():
         find_string = request.form.get("find_string")
         if form.find_string.data:
             users = set(session.query(User).filter(User.name.like(f"%{find_string}%")).all())
-            friends = set(session.query(User).filter(
+            if current_user.is_authenticated:
+                friends = set(session.query(User).filter(
                 User.id.in_(current_user.friends.strip("'").split(", "))).filter(
                 User.name.like(f"%{find_string}%")).all())
         else:
@@ -577,7 +580,7 @@ def neuro(neuroname):
            "japanese_chin": "Японский Хин", "keeshond": "Кеесхонд", "leonberger": "Леонбергер",
            "miniature_pinscher": "Миниатюрный пинчер",
            "newfoundland": "Ньюфауленд", "pomeranian": "Померанский шпиц",
-           "pug": "Мопс", "saint_bernard": "Сенбернар", "samoyed": "Саемод",
+           "pug": "Мопс", "saint_bernard": "Сенбернар", "samoyed": "Самоед",
            "scottish_terrier": "Шотландский терьер", "shiba_inu": "Сиба-Ину",
            "staffordshire_bull_terrier": "Стаффордширский бультерьер",
            "wheaten_terrier": "Ирландский мягкошёрстный пшеничный терьер",
@@ -605,7 +608,9 @@ def neuro(neuroname):
         name = form.name + dct[str(name[0]).split()[0]]
     elif neuroname == "cat_dogs":
         name = analyze_image_dog(path[0].lstrip("/"))
+        path[1] = url_for("static", filename=f"img/neuro/{name[0]}.jpg").lstrip("/")
         name = form.name + dct[str(name[0]).split()[0]]
+    elif neuroname == "random_cat":
         response = requests.get("https://api.thecatapi.com/v1/images/search")
         json_response = response.json()
         url = json_response[0]["url"]
@@ -614,7 +619,12 @@ def neuro(neuroname):
         f = open("static/img/neuro/user/tmpcat.jpg", "wb")
         f.write(response.content)
         f.close()
+        filename = choice(
+            ["Abyssinian", "Bengal", "Birman", "Bombay", "British_Shorthair", "Egyptian_Mau",
+             "Maine_Coon", "Persian", "Ragdoll", "Russian_Blue", "Siamese", "Sphynx"])
+        path[0] = url_for("static", filename=f"img/neuro/{filename}.jpg")
         path[1] = "static/img/neuro/user/tmpcat.jpg"
+        name = "Просто две кошки)"
     print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
           "воспользовался нейросетью", neuroname)
     fact = ""
@@ -668,7 +678,8 @@ def password_reset():
     url_from = request.args.get('url_from')
     if url_from == '/settings':
         if request.method == "GET":
-            return render_template("password_reset.html", base=get_base(), form=form, title="Смена пароля")
+            return render_template("password_reset.html", base=get_base(), form=form,
+                                   title="Смена пароля")
         if request.method == "POST":
             if check_password(form.password.data):
                 return render_template("password_reset.html", title="Смена пароля",
@@ -864,7 +875,8 @@ def index():
     else:
         news = session.query(News).filter(News.is_private != True)
     return render_template("index.html", news=news, title="Лента", base=get_base(),
-                           get_time=get_time, lst=lst, check_like=check_like)
+                           get_time=get_time, lst=lst, check_like=check_like,
+                           check_number_of_like=check_number_of_like)
 
 
 @app.route("/cookie_test")

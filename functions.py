@@ -1,7 +1,18 @@
 import datetime
 
+import pymorphy2
+
+morph = pymorphy2.MorphAnalyzer()
+
 months = {1: "Января", 2: "Февраля", 3: "Марта", 4: "Апреля", 5: "Мая", 6: "Июня", 7: "Июля",
           8: "Августа", 9: "Сентября", 10: "Октября", 11: "Ноября", 12: "Декабря"}
+
+
+def check_number_of_like(count):
+    if count != 1:
+        return ["Одобрили", morph.parse('человек')[0].make_agree_with_number(count).word]
+    else:
+        return ["Одобрил", morph.parse('человек')[0].make_agree_with_number(count).word]
 
 
 def check_like(news_id, lst):

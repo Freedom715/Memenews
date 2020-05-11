@@ -1,22 +1,17 @@
 import datetime
 import os
 from random import choice, randint
-
 import requests
+
 from flask import Flask, render_template, redirect, request, make_response, session, url_for, send_from_directory
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_mail import Mail
 from flask_mail import Message as FlaskMessage
 from flask_restful import Api
-from flask_wtf import FlaskForm
 from sqlalchemy import or_
 from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField, BooleanField
-from wtforms.fields.html5 import EmailField
-from wtforms.validators import DataRequired
-
 import messages_resources
 import news_resources
 from analize import analyze_image_meme, analyze_image_dog, analyze_image_lion
@@ -26,6 +21,7 @@ from data.news import News
 from data.photos import Photo
 from data.users import User
 from functions import check_password, get_time, check_like, check_number_of_like
+from forms import BaseForm, RegisterForm, LoginForm, NewsForm, ProfileForm, UsersForm, PasswordForm, MemesForm
 
 app = Flask(__name__)
 api = Api(app)
@@ -49,86 +45,12 @@ api.add_resource(news_resources.NewsResource, "/api/v2/news/<int:news_id>")
 api.add_resource(messages_resources.MessagesListResource, "/api/v2/messages")
 api.add_resource(messages_resources.MessagesResource, "/api/v2/messages/<int:message_id>")
 
-
 email_confirmation = False
 name = ""
 email = ""
 status = ""
 key = ""
 password = ""
-
-
-class BaseForm(FlaskForm):
-    background = ""
-    text_color = "white"
-    back = "#0a0a0a"
-    back_color = "#646464"
-    font_white = "white"
-    js_for_files = ""
-    favicon = ""
-
-
-class RegisterForm(FlaskForm):
-    email = EmailField("Почта")
-    password = PasswordField("Пароль")
-    password_again = PasswordField("Повторите пароль")
-    name = StringField("Имя пользователя")
-    status = TextAreaField("Немного о себе")
-    submit = SubmitField("Отправить проверочное сообщение")
-    submit_email = SubmitField("Зарегистрироваться")
-    key = StringField("Введите проверочный код")
-
-
-class LoginForm(FlaskForm):
-    email = EmailField("Почта", validators=[DataRequired()])
-    password = PasswordField("Пароль", validators=[DataRequired()])
-    remember_me = BooleanField("Запомнить меня")
-    submit = SubmitField("Войти")
-
-
-class NewsForm(FlaskForm):
-    title = "Заголовок"
-    content = "Содержание"
-    is_private = "Личное"
-    submit = "Применить"
-
-
-class ProfileForm(FlaskForm):
-    name = "User"
-    user = current_user
-    cur_user = current_user
-    friends = [current_user]
-    error = ""
-    password = PasswordField("Для удаления введите пароль", validators=[DataRequired()])
-
-
-class UsersForm(FlaskForm):
-    find_string = StringField("Поиск людей")
-    submit = SubmitField("Найти")
-
-
-class PasswordForm(FlaskForm):
-    old_password = PasswordField("Введите старый пароль", validators=[DataRequired()])
-    password = PasswordField("Ввведите новый пароль", validators=[DataRequired()])
-    password_again = PasswordField("Повторите новый пароль", validators=[DataRequired()])
-    submit = SubmitField("Войти")
-
-
-class MessagesForm(FlaskForm):
-    messages = []
-
-
-def choice_name():
-    return choice(
-        ["Хм... Наша нейросеть предполагает что на этой фотографии ",
-         "Похоже, что на этом фото ",
-         "По мнению нейросети на этой картинке "])
-    # "Мы и подумать не могли что существует вещь похожая на "])
-    # "Очень малый процент людей похожи на "])
-
-
-class MemesForm(FlaskForm):
-    name = choice_name()
 
 
 def get_base():
@@ -553,8 +475,8 @@ def get_people():
             users = set(session.query(User).filter(User.name.like(f"%{find_string}%")).all())
             if current_user.is_authenticated:
                 friends = set(session.query(User).filter(
-                User.id.in_(current_user.friends.strip("'").split(", "))).filter(
-                User.name.like(f"%{find_string}%")).all())
+                    User.id.in_(current_user.friends.strip("'").split(", "))).filter(
+                    User.name.like(f"%{find_string}%")).all())
         else:
             users = set(session.query(User).all())
     users -= friends
@@ -912,4 +834,4 @@ def session_test():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
+    app.run(debug=True)

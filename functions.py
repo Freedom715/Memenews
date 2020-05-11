@@ -1,4 +1,5 @@
 import datetime
+from random import choice
 
 import pymorphy2
 
@@ -41,3 +42,10 @@ def get_time(date_input, time_input):
         return "Вчера в " + ":".join([hour, minute])
     else:
         return day + " " + months[int(month)] + " " + year + " в " + ":".join([hour, minute])
+
+
+def choice_name():
+    return choice(
+        ["Хм... Наша нейросеть предполагает что на этой фотографии ",
+         "Похоже, что на этом фото ",
+         "По мнению нейросети на этой картинке "])

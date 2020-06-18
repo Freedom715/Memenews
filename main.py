@@ -1,9 +1,10 @@
 import datetime
 import os
 from random import choice, randint
-import requests
 
-from flask import Flask, render_template, redirect, request, make_response, session, url_for, send_from_directory
+import requests
+from flask import Flask, render_template, redirect, request, make_response, session, url_for, \
+    send_from_directory
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_mail import Mail
 from flask_mail import Message as FlaskMessage
@@ -12,6 +13,7 @@ from sqlalchemy import or_
 from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
+
 import messages_resources
 import news_resources
 from analize import analyze_image_meme, analyze_image_dog, analyze_image_lion
@@ -20,8 +22,9 @@ from data.messages import Message
 from data.news import News
 from data.photos import Photo
 from data.users import User
+from forms import BaseForm, RegisterForm, LoginForm, NewsForm, ProfileForm, UsersForm, PasswordForm, \
+    MemesForm
 from functions import check_password, get_time, check_like, check_number_of_like
-from forms import BaseForm, RegisterForm, LoginForm, NewsForm, ProfileForm, UsersForm, PasswordForm, MemesForm
 
 app = Flask(__name__)
 api = Api(app)
@@ -85,6 +88,140 @@ def create_app():
     return app
 
 
+@login_manager.user_loader
+def load_user(user_id):
+    session = db_session.create_session()
+    return session.query(User).get(user_id)
+
+
+def get_messages(user_id):
+    session = db_session.create_session()
+    messages = [elem for elem in
+                session.query(Message).filter(Message.user_from_id == current_user.id,
+                                              Message.user_to_id == user_id)]
+    messages += [elem for elem in
+                 session.query(Message).filter(Message.user_to_id == current_user.id,
+                                               Message.user_from_id == user_id)]
+    messages.sort(key=lambda elem: elem.id)
+    return messages
+
+
+@app.route("/messages/<user_id>", methods=["GET", "POST"])
+@login_required
+def messenger(user_id):
+    session = db_session.create_session()
+    user_to = session.query(User).filter(User.id == user_id).first()
+    if request.method == "GET":
+        messages = [elem for elem in
+                    session.query(Message).filter(Message.user_from_id == current_user.id,
+                                                  Message.user_to_id == user_id)]
+        messages += [elem for elem in
+                     session.query(Message).filter(Message.user_to_id == current_user.id,
+                                                   Message.user_from_id == user_id)]
+        messages.sort(key=lambda elem: elem.id)
+        if not messages == []:
+            last = max([elem.id for elem in messages])
+        else:
+            last = 0
+        return render_template(f"messenger.html", base=get_base(), messages=messages,
+                               user_to=user_to,
+                               get_time=get_time, last=last, now=datetime.datetime.now())
+    elif request.method == "POST":
+        messages = [elem for elem in
+                    session.query(Message).filter(Message.user_from_id == current_user.id,
+                                                  Message.user_to_id == user_id)]
+        messages += [elem for elem in
+                     session.query(Message).filter(Message.user_to_id == current_user.id,
+                                                   Message.user_from_id == user_id)]
+        messages.sort(key=lambda elem: elem.id)
+        if not messages == []:
+            last = max([elem.id for elem in messages])
+        else:
+            last = False
+        text = request.form.get("text")
+        message = Message()
+        message.text = text
+        message.user_from_id = current_user.id
+        message.user_to_id = session.query(User).filter(User.id == user_id).first().id
+        session.add(message)
+        session.commit()
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+              "отправил сообщение пользователю",
+              session.query(User).filter(User.id == user_id).first().name)
+        if last:
+            return redirect(f"/messages/{user_id}#{last}")
+        else:
+            return redirect(f"/messages/{user_id}")
+
+
+@app.route("/messages", methods=["GET", "POST"])
+@login_required
+def messages():
+    session = db_session.create_session()
+    messages = session.query(Message).filter(
+        or_(Message.user_from_id == current_user.id, Message.user_to_id == current_user.id)).all()
+    people_id = []
+    people = []
+    if request.method == "POST":
+        username = request.form.get("username")
+        print(username)
+        for elem in messages:
+            if elem.user_to_id not in people_id:
+                people.append(session.query(User).filter(User.id == elem.user_to_id,
+                                                         User.name.like(f"{username}%")).first())
+                people_id.append(elem.user_to_id)
+            if elem.user_from_id not in people_id:
+                people.append(session.query(User).filter(User.id == elem.user_from_id,
+                                                         User.name.like(f"{username}%")).first())
+                people_id.append(elem.user_from_id)
+    else:
+        for elem in messages:
+            if elem.user_to_id not in people_id:
+                people.append(session.query(User).filter(User.id == elem.user_to_id).first())
+                people_id.append(elem.user_to_id)
+            if elem.user_from_id not in people_id:
+                people.append(session.query(User).filter(User.id == elem.user_from_id).first())
+                people_id.append(elem.user_from_id)
+    print(people)
+    return render_template("messages.html", base=get_base(), people_id=people_id,
+                           people=people, title="Телеграф", form=MemesForm)
+
+
+@app.route("/message_delete/<id>", methods=["GET", "POST"])
+@login_required
+def message_delete(id):
+    session = db_session.create_session()
+    message = session.query(Message).filter(Message.id == id,
+                                            Message.user_from_id == current_user.id).first()
+    messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
+                                                 Message.user_to_id == current_user.id))
+    if messages:
+        last = max([elem.id for elem in messages])
+    else:
+        last = 0
+    if message:
+        session.delete(message)
+        session.commit()
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
+              "удалил сообщение", id)
+        return redirect(f"/messages/{message.user_to_id}#{last}")
+    else:
+        abort(404)
+
+
+@app.route("/photo/<photo_id>")
+def photo(photo_id):
+    session = db_session.create_session()
+    photo = session.query(Photo).filter(Photo.id == photo_id).first()
+    # if photo_id in current_user.photos:
+    #     # Проверка наналичие фотографии в фотографиях пользователя
+    #     # и последующем отображении кнопки удалить
+    #     user = True
+    # else:
+    #     user = False
+    return render_template("photos.html", base=get_base(), photo=photo)
+
+
 @app.route("/add_photo", methods=["GET", "POST"])
 @login_required
 def add_photo():
@@ -126,115 +263,6 @@ def add_photo():
             session.commit()
             return redirect("/profile")
     return render_template("add_photo.html", title="Добавление фото", form=form, base=get_base())
-
-
-def get_messages(user_id):
-    session = db_session.create_session()
-    user_to = session.query(User).filter(User.id == user_id).first()
-    messages = [elem for elem in session.query(Message).filter(Message.user_from_id == current_user.id,
-                                                               Message.user_to_id == user_id)]
-    messages += [elem for elem in session.query(Message).filter(Message.user_to_id == current_user.id,
-                                                                Message.user_from_id == user_id)]
-    messages.sort(key=lambda elem: elem.id)
-    return messages
-
-
-@app.route("/messages/<user_id>", methods=["GET", "POST"])
-@login_required
-def messenger(user_id):
-    session = db_session.create_session()
-    user_to = session.query(User).filter(User.id == user_id).first()
-    if request.method == "GET":
-        messages = [elem for elem in session.query(Message).filter(Message.user_from_id == current_user.id,
-                                                                   Message.user_to_id == user_id)]
-        messages += [elem for elem in session.query(Message).filter(Message.user_to_id == current_user.id,
-                                                                    Message.user_from_id == user_id)]
-        messages.sort(key=lambda elem: elem.id)
-        if not messages == []:
-            last = max([elem.id for elem in messages])
-        else:
-            last = 0
-        return render_template(f"messenger.html", base=get_base(), messages=messages, user_to=user_to,
-                               get_time=get_time, last=last, now=datetime.datetime.now())
-    elif request.method == "POST":
-        messages = [elem for elem in session.query(Message).filter(Message.user_from_id == current_user.id,
-                                                                   Message.user_to_id == user_id)]
-        messages += [elem for elem in session.query(Message).filter(Message.user_to_id == current_user.id,
-                                                                    Message.user_from_id == user_id)]
-        messages.sort(key=lambda elem: elem.id)
-        if not messages == []:
-            last = max([elem.id for elem in messages])
-        else:
-            last = False
-        text = request.form.get("text")
-        message = Message()
-        message.text = text
-        message.user_from_id = current_user.id
-        message.user_to_id = session.query(User).filter(User.id == user_id).first().id
-        session.add(message)
-        session.commit()
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
-              "отправил сообщение пользователю",
-              session.query(User).filter(User.id == user_id).first().name)
-        if last:
-            return redirect(f"/messages/{user_id}#{last}")
-        else:
-            return redirect(f"/messages/{user_id}")
-
-
-@app.route("/messages")
-@login_required
-def messages():
-    session = db_session.create_session()
-    messages = session.query(Message).filter(
-        or_(Message.user_from_id == current_user.id, Message.user_to_id == current_user.id)).all()
-    people_id = []
-    people = []
-    # print([elem.id for elem in messages])
-    for elem in messages:
-        if elem.user_to_id not in people_id:
-            people.append(session.query(User).filter(User.id == elem.user_to_id).first())
-            people_id.append(elem.user_to_id)
-        if elem.user_from_id not in people_id:
-            people.append(session.query(User).filter(User.id == elem.user_from_id).first())
-            people_id.append(elem.user_from_id)
-    return render_template("messages.html", base=get_base(), people_id=people_id,
-                           people=people, title="Телеграф")
-
-
-@app.route("/message_delete/<id>", methods=["GET", "POST"])
-@login_required
-def message_delete(id):
-    session = db_session.create_session()
-    message = session.query(Message).filter(Message.id == id,
-                                            Message.user_from_id == current_user.id).first()
-    messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
-                                                 Message.user_to_id == current_user.id))
-    if messages:
-        last = max([elem.id for elem in messages])
-    else:
-        last = 0
-    if message:
-        session.delete(message)
-        session.commit()
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
-              "удалил сообщение", id)
-        return redirect(f"/messages/{message.user_to_id}#{last}")
-    else:
-        abort(404)
-
-
-@app.route("/photo/<photo_id>")
-def photo(photo_id):
-    session = db_session.create_session()
-    photo = session.query(Photo).filter(Photo.id == photo_id).first()
-    # if photo_id in current_user.photos:
-    #     # Проверка наналичие фотографии в фотографиях пользователя
-    #     # и последующем отображении кнопки удалить
-    #     user = True
-    # else:
-    #     user = False
-    return render_template("photos.html", base=get_base(), photo=photo)
 
 
 @app.route("/photo_delete/<photo_id>")
@@ -284,7 +312,7 @@ def photo_edit(photo_id):
 
 @login_required
 @app.route("/add_friend/<int:user_id>", methods=["GET", "POST"])
-def add_friend(user_id):
+def friend_add(user_id):
     if user_id != current_user.id:
         session = db_session.create_session()
         user = session.query(User).filter(User.id == current_user.id).first()
@@ -299,44 +327,6 @@ def add_friend(user_id):
         session.commit()
     url_from = request.args.get('url_from')
     return redirect(url_from)
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    session = db_session.create_session()
-    return session.query(User).get(user_id)
-
-
-@app.route("/like_post/<news_id>", methods=["GET", "POST"])
-def like_post(news_id):
-    session = db_session.create_session()
-    news = session.query(News).filter(News.id == news_id).first()
-    user = session.query(User).filter(User.id == current_user.id).first()
-    lst = user.liked_news
-    if lst:
-        lst = str(lst).strip("'")
-    if user.liked_news == "":
-        user.liked_news = str(news_id)
-        news.liked += 1
-    elif news_id not in lst.split(", "):
-        lst = lst.strip("'") + ", " + news_id
-        if ", " not in user.liked_news and current_user.liked_news == "":
-            user.liked_news = "'" + str(news_id) + "'"
-        elif ", " not in user.liked_news and current_user.liked_news != "":
-            user.liked_news = "'" + user.liked_news.strip("'") + ", " + str(news_id) + "'"
-        else:
-            user.liked_news = user.liked_news.rstrip("'") + ", " + str(news_id) + "'"
-        news.liked += 1
-    else:
-        user = session.query(User).filter(User.id == current_user.id).first()
-        user_liked_news = str(user.liked_news).strip("'").split(", ")
-        user_liked_news = list(filter(lambda x: x != news_id, user_liked_news))
-        user.liked_news = "'" + ", ".join(user_liked_news) + "'"
-        news.liked -= 1
-    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "лайкнул пост",
-          news_id)
-    session.commit()
-    return redirect(f"/#{news_id}")
 
 
 @app.route("/friend_delete/<friend_id>", methods=["GET", "POST"])
@@ -391,6 +381,37 @@ def return_profile():
     print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
           "перешел в свой профиль")
     return redirect(f"/profile/{current_user.id}")
+
+
+@app.route("/like_post/<news_id>", methods=["GET", "POST"])
+def like_news(news_id):
+    session = db_session.create_session()
+    news = session.query(News).filter(News.id == news_id).first()
+    user = session.query(User).filter(User.id == current_user.id).first()
+    lst = user.liked_news
+    if lst:
+        lst = str(lst).strip("'")
+    if user.liked_news == "":
+        user.liked_news = str(news_id)
+        news.liked += 1
+    elif news_id not in lst.split(", "):
+        if ", " not in user.liked_news and current_user.liked_news == "":
+            user.liked_news = "'" + str(news_id) + "'"
+        elif ", " not in user.liked_news and current_user.liked_news != "":
+            user.liked_news = "'" + user.liked_news.strip("'") + ", " + str(news_id) + "'"
+        else:
+            user.liked_news = user.liked_news.rstrip("'") + ", " + str(news_id) + "'"
+        news.liked += 1
+    else:
+        user = session.query(User).filter(User.id == current_user.id).first()
+        user_liked_news = str(user.liked_news).strip("'").split(", ")
+        user_liked_news = list(filter(lambda x: x != news_id, user_liked_news))
+        user.liked_news = "'" + ", ".join(user_liked_news) + "'"
+        news.liked -= 1
+    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "лайкнул пост",
+          news_id)
+    session.commit()
+    return redirect(f"/#{news_id}")
 
 
 @app.route("/news", methods=["GET", "POST"])
@@ -457,6 +478,27 @@ def edit_news(id):
             abort(404)
     return render_template("add_post.html", title="Редактирование новости", form=form,
                            base=get_base())
+
+
+@app.route("/delete_news/<int:id>", methods=["GET", "POST"])
+@login_required
+def delete_news(id):
+    session = db_session.create_session()
+    news = session.query(News).filter(News.id == id,
+                                      News.user == current_user).first()
+    news_all = session.query(News).filter(News.user == current_user).all()
+    if len(news_all) >= 2:
+        redirect_to = news_all[news_all.index(news) - 1].id
+    else:
+        redirect_to = 0
+    if news:
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "удалил новость",
+              news.title, id)
+        session.delete(news)
+        session.commit()
+    else:
+        abort(404)
+    return redirect(f"/#{redirect_to}")
 
 
 @app.route("/people", methods=["GET", "POST"])
@@ -555,27 +597,6 @@ def neuro(neuroname):
                            name=name, neuroname=neuroname)
 
 
-@app.route("/news_delete/<int:id>", methods=["GET", "POST"])
-@login_required
-def news_delete(id):
-    session = db_session.create_session()
-    news = session.query(News).filter(News.id == id,
-                                      News.user == current_user).first()
-    news_all = session.query(News).filter(News.user == current_user).all()
-    if len(news_all) >= 2:
-        redirect_to = news_all[news_all.index(news) - 1].id
-    else:
-        redirect_to = 0
-    if news:
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "удалил новость",
-              news.title, id)
-        session.delete(news)
-        session.commit()
-    else:
-        abort(404)
-    return redirect(f"/#{redirect_to}")
-
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
@@ -590,6 +611,95 @@ def login():
                                message="Неправильный логин или пароль",
                                form=form, base=get_base())
     return render_template("login.html", title="Авторизация", form=form, base=get_base())
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "вышел")
+    logout_user()
+    return redirect("/")
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    global email_confirmation, name, email, status, key, password
+    form = RegisterForm()
+    cancel = request.args.get("cancel")
+    if cancel:
+        email_confirmation = False
+    session = db_session.create_session()
+    if form.validate_on_submit() and not email_confirmation:
+        if not check_password(form.password.data):
+            if form.password.data != form.password_again.data:
+                return render_template("register.html", title="Регистрация",
+                                       form=form,
+                                       message="Пароли не совпадают", base=get_base())
+        else:
+            return render_template("register.html", title="Регистрация",
+                                   form=form,
+                                   message=check_password(form.password.data), base=get_base())
+        if session.query(User).filter(User.email == form.email.data).first():
+            return render_template("register.html", title="Регистрация",
+                                   form=form,
+                                   message="Такой пользователь уже есть", base=get_base())
+        if session.query(User).filter(User.name == form.name.data).first():
+            return render_template("register.html", title="Регистрация",
+                                   form=form,
+                                   message="Такой пользователь уже есть", base=get_base())
+        if not form.email.data:
+            return render_template("register.html", title="Регистрация",
+                                   form=form,
+                                   message="Введите электронную почту", base=get_base())
+        if not form.name.data:
+            return render_template("register.html", title="Регистрация",
+                                   form=form,
+                                   message="Введите имя пользователя", base=get_base())
+        if form.name.data == "DELETED":
+            return render_template("register.html", title="Регистрация",
+                                   form=form,
+                                   message="Это зарезервированное имя, его испольовать нельзя",
+                                   base=get_base())
+        email_confirmation = True
+        name = form.name.data
+        email = form.email.data
+        password = form.password.data
+        status = form.status.data
+        key = randint(100000, 999999)
+        try:
+            msg = FlaskMessage("Memenews", recipients=[email])
+            msg.html = f"<h2>Код для регистрации на проекте Memenews</h2>\n<p>{key}</p>"
+            mail.send(msg)
+        except:
+            return render_template("register.html", title="Регистрация",
+                                   form=form,
+                                   message="Произошла неизвестная ошибка, связанная с электронной почтой, "
+                                           "проверьте адрес эл. почты или отправьте запрос позже",
+                                   base=get_base())
+        return render_template("confirm_email.html", title="Регистрация", form=form, base=get_base(),
+                               message="")
+    elif email_confirmation:
+        if str(form.key.data) == str(key):
+            user = User(
+                name=name,
+                email=email,
+                status=status,
+                friends="",
+                theme=2,
+                liked_news=""
+            )
+            user.set_password(password)
+            print(datetime.datetime.now(), name, email, "зарегистрировался")
+            session.add(user)
+            session.commit()
+            email_confirmation = False
+            return redirect("/login")
+        else:
+            return render_template("confirm_email.html", title="Регистрация", form=form,
+                                   base=get_base(),
+                                   message="Коды не совпадают")
+    else:
+        return render_template("register.html", title="Регистрация", form=form, base=get_base())
 
 
 @app.route("/password_reset", methods=["GET", "POST"])
@@ -665,86 +775,6 @@ def settings():
         return redirect(f"/profile/{current_user.id}")
 
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    global email_confirmation, name, email, status, key, password
-    form = RegisterForm()
-    cancel = request.args.get("cancel")
-    if cancel:
-        email_confirmation = False
-    session = db_session.create_session()
-    if form.validate_on_submit() and not email_confirmation:
-        if not check_password(form.password.data):
-            if form.password.data != form.password_again.data:
-                return render_template("register.html", title="Регистрация",
-                                       form=form,
-                                       message="Пароли не совпадают", base=get_base())
-        else:
-            return render_template("register.html", title="Регистрация",
-                                   form=form,
-                                   message=check_password(form.password.data), base=get_base())
-        if session.query(User).filter(User.email == form.email.data).first():
-            return render_template("register.html", title="Регистрация",
-                                   form=form,
-                                   message="Такой пользователь уже есть", base=get_base())
-        if session.query(User).filter(User.name == form.name.data).first():
-            return render_template("register.html", title="Регистрация",
-                                   form=form,
-                                   message="Такой пользователь уже есть", base=get_base())
-        if not form.email.data:
-            return render_template("register.html", title="Регистрация",
-                                   form=form,
-                                   message="Введите электронную почту", base=get_base())
-        if not form.name.data:
-            return render_template("register.html", title="Регистрация",
-                                   form=form,
-                                   message="Введите имя пользователя", base=get_base())
-        if form.name.data == "DELETED":
-            return render_template("register.html", title="Регистрация",
-                                   form=form,
-                                   message="Это зарезервированное имя, его испольовать нельзя", base=get_base())
-        email_confirmation = True
-        name = form.name.data
-        email = form.email.data
-        password = form.password.data
-        status = form.status.data
-        key = randint(100000, 999999)
-        try:
-            msg = FlaskMessage("Memenews", recipients=[email])
-            msg.html = f"<h2>Код для регистрации на проекте Memenews</h2>\n<p>{key}</p>"
-            mail.send(msg)
-        except:
-            return render_template("register.html", title="Регистрация",
-                                   form=form,
-                                   message="Произошла неизвестная ошибка, связанная с электронной почтой, "
-                                           "проверьте адрес эл. почты или отправьте запрос позже",
-                                   base=get_base())
-        return render_template("confirm_email.html", title="Регистрация", form=form, base=get_base(),
-                               message="")
-    elif email_confirmation:
-        if str(form.key.data) == str(key):
-            user = User(
-                name=name,
-                email=email,
-                status=status,
-                friends="",
-                theme=2,
-                liked_news=""
-            )
-            user.set_password(password)
-            print(datetime.datetime.now(), name, email, "зарегистрировался")
-            session.add(user)
-            session.commit()
-            email_confirmation = False
-            return redirect("/login")
-        else:
-            return render_template("confirm_email.html", title="Регистрация", form=form,
-                                   base=get_base(),
-                                   message="Коды не совпадают")
-    else:
-        return render_template("register.html", title="Регистрация", form=form, base=get_base())
-
-
 @app.route("/user_delete/<int:user_id>", methods=["GET", "POST"])
 def delete_user(user_id):
     session = db_session.create_session()
@@ -772,14 +802,6 @@ def delete_user(user_id):
             return render_template("user_delete.html", title="Удаление", form=form, base=get_base(),
                                    message="Пароль неверный")
     return redirect("/logout")
-
-
-@app.route("/logout")
-@login_required
-def logout():
-    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "вышел")
-    logout_user()
-    return redirect("/")
 
 
 @app.route('/favicon.ico')

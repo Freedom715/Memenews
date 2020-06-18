@@ -36,7 +36,7 @@
                 {% endif %}
                 {% if current_user == item.user %}
                 <a href="/news/{{ item.id }}" class="btn-sm btn-warning">Изменить</a>
-                <a href="/news_delete/{{ item.id }}" class="btn-sm btn-danger">Удалить</a>
+                <a href="/delete_news/{{ item.id }}" class="btn-sm btn-danger">Удалить</a>
                 {% endif %}
                 <p>
             </div>

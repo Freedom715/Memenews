@@ -2,8 +2,19 @@
 
 {% block content %}
 <div class="col-xl">
+    <div class="btn-toolbar justify-content-between" role="toolbar"
+         aria-label="Toolbar with button groups">
+        <form action="" method="post">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="Имя пользователя"
+                       aria-label="Имя пользователя" name="username">
+            <button type="submit" style="margin-bottom:10px"
+                    class="btn btn-secondary">Найти</button>
+            </div>
+        </form>
+    </div>
     {% for elem in people %}
-    {% if elem.id != current_user.id %}
+    {% if elem.id != current_user.id and elem != None %}
     <div class="media block rounded-lg">
         <a href="/profile/{{elem.id}}">
             <img src="{{elem.avatar}}"

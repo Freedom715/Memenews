@@ -37,11 +37,11 @@ def get_time(date_input, time_input):
     hour, minute, second = str(time_input).split(".")[0].split(":")
     hour = str(int(hour) + 3)
     if date.day == current_date_time.day:
-        return "Сегодня в " + ":".join([hour, minute])
+        return "Сегодня в " + ":".join([hour.lstrip('0'), minute.lstrip('0')])
     elif date.day + 1 == current_date_time.day:
-        return "Вчера в " + ":".join([hour, minute])
+        return "Вчера в " + ":".join([hour.lstrip('0'), minute.lstrip('0')])
     else:
-        return day + " " + months[int(month)] + " " + year + " в " + ":".join([hour, minute])
+        return day.lstrip('0') + " " + months[int(month)] + " " + year + " в " + ":".join([hour, minute])
 
 
 def choice_name():

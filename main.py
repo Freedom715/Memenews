@@ -88,6 +88,14 @@ def create_app():
     return app
 
 
+@app.before_request
+def before_request(): # перед каждым запросом проверять новые сообщения
+    # Возможно стоит смотреть во время отправки сообщения находится ли пользователь на странице с диалогом
+    # если нет выводить в сообщения +1
+    # Стоит учитывать и смотреть время
+    pass
+
+
 @login_manager.user_loader
 def load_user(user_id):
     session = db_session.create_session()

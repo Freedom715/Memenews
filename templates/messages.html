@@ -8,25 +8,38 @@
             <div class="input-group mb-3">
                 <input type="text" class="form-control" placeholder="Имя пользователя"
                        aria-label="Имя пользователя" name="username">
-            <button type="submit" style="margin-bottom:10px"
-                    class="btn btn-secondary">Найти</button>
+                <button type="submit" style="margin-bottom:10px"
+                        class="btn btn-secondary">Найти
+                </button>
             </div>
         </form>
     </div>
     {% for elem in people %}
     {% if elem.id != current_user.id and elem != None %}
-    <div class="media block rounded-lg">
-        <a href="/profile/{{elem.id}}">
-            <img src="{{elem.avatar}}"
-                 class="align-self-center mr-3 rounded-lg" alt="PEP8"
-                 width="100"
-                 height="100" title="{{elem.name}}">
+    <div class="decorate">
+        <a href="/messages/{{elem.id}}">
+            <div class="media block rounded-lg">
+                <img src="{{elem.avatar}}"
+                     class="align-self-center mr-3 rounded-lg" alt="PEP8"
+                     width="100"
+                     height="100" title="{{elem.name}}">
+                <div class="media-body">
+                    <h2>{{elem.name}}</h2>
+                    {% for item in message %}
+                    {% if item.user_from_id == elem.id %}
+                     {{item.text}}
+                    <br>
+                    {{get_time(item.time.date(), item.time.time())}}
+                    {% endif %}
+                    {% if item.user_to_id == elem.id %}
+                    Вы: {{item.text}}
+                    <br>
+                    {{get_time(item.time.date(), item.time.time())}}
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
         </a>
-        <div class="media-body">
-            <h2>{{elem.name}}</h2>
-            <a class="btn btn-warning" href="/messages/{{elem.id}}" role="button">Перейти к
-                беседе</a>
-        </div>
     </div>
     {% endif %}
     {% endfor %}

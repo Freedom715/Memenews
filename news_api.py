@@ -63,3 +63,15 @@ def delete_news(news_id):
     session.delete(news)
     session.commit()
     return jsonify({'success': 'OK'})
+
+
+#@blueprint.route('/api/news?news_id=<int:news_id>/comment', methods=['GET'])
+#def get_comment():
+#    news_id = request.args.get('news_id')
+#    session = db_session.create_session()
+#    comment = session.query()
+#    return jsonify(
+#        {
+#            'news': news.to_dict(only=('id', 'title', 'content', 'user_id', 'is_private'))
+#        }
+#    )

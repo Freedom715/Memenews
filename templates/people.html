@@ -15,6 +15,7 @@
     </div>
     {% for item in users%}
     {% if item.name != "DELETED" and item.id != current_user.id%}
+    <a href="profile/{{item.id}}">
     <div class="media block rounded-lg">
         <img src={{item.avatar}}
              class="align-self-start mr-3 rounded-lg"
@@ -32,6 +33,7 @@
             {% endif %}
         </div>
     </div>
+        </a>
     {% endif %}
     {% endfor %}
     {% for item in friends%}

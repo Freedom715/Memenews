@@ -170,6 +170,7 @@ def messages():
         or_(Message.user_from_id == current_user.id, Message.user_to_id == current_user.id)).all()
     people_id = []
     people = []
+    message = []
     if request.method == "POST":
         username = request.form.get("username")
         print(username)
@@ -178,21 +179,28 @@ def messages():
                 people.append(session.query(User).filter(User.id == elem.user_to_id,
                                                          User.name.like(f"{username}%")).first())
                 people_id.append(elem.user_to_id)
+                message.append(elem)
             if elem.user_from_id not in people_id:
                 people.append(session.query(User).filter(User.id == elem.user_from_id,
                                                          User.name.like(f"{username}%")).first())
                 people_id.append(elem.user_from_id)
+                message.append(elem)
     else:
         for elem in messages:
             if elem.user_to_id not in people_id:
                 people.append(session.query(User).filter(User.id == elem.user_to_id).first())
                 people_id.append(elem.user_to_id)
+                message.append(elem)
             if elem.user_from_id not in people_id:
                 people.append(session.query(User).filter(User.id == elem.user_from_id).first())
                 people_id.append(elem.user_from_id)
-    print(people)
-    return render_template("messages.html", base=get_base(), people_id=people_id,
-                           people=people, title="Телеграф", form=MemesForm)
+                message.append(elem)
+    if current_user.id in people_id:
+        people_id.remove(current_user.id)
+    message = set(message)
+    print(message)
+    return render_template("messages.html", base=get_base(), people_id=people_id, message=message,
+                           people=people, title="Телеграф", form=MemesForm, get_time=get_time)
 
 
 @app.route("/message_delete/<id>", methods=["GET", "POST"])
@@ -821,18 +829,22 @@ def favicon():
 @app.route("/")
 def index():
     lst = []
+    form = MemesForm()
     session = db_session.create_session()
-    if current_user.is_authenticated:
-        news = session.query(News).filter(
-            (News.user == current_user) | (News.is_private != True))
-        lst = current_user.liked_news
-        if lst:
-            lst = str(lst).strip("'").split(", ")
+    if form.validate_on_submit():
+        pass
     else:
-        news = session.query(News).filter(News.is_private != True)
+        if current_user.is_authenticated:
+            news = session.query(News).filter(
+                (News.user == current_user) | (News.is_private != True))
+            lst = current_user.liked_news
+            if lst:
+                lst = str(lst).strip("'").split(", ")
+        else:
+            news = session.query(News).filter(News.is_private != True)
     return render_template("index.html", news=news, title="Лента", base=get_base(),
                            get_time=get_time, lst=lst, check_like=check_like,
-                           check_number_of_like=check_number_of_like)
+                           check_number_of_like=check_number_of_like, form=form)
 
 
 @app.route("/cookie_test")

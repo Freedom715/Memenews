@@ -35,13 +35,26 @@ def get_time(date_input, time_input):
     date = datetime.date(int(year), int(month), int(day))
     current_date_time = datetime.datetime.now()
     hour, minute, second = str(time_input).split(".")[0].split(":")
-    hour = str(int(hour) + 3)
+    minute_difference = (current_date_time.hour * 60 + current_date_time.minute) - (
+            int(hour) * 60 + int(minute))
     if date.day == current_date_time.day:
-        return "Сегодня в " + ":".join([hour.lstrip('0'), minute.lstrip('0')])
+        if minute_difference // 60 == 0:
+            if minute_difference != 0:
+                return ' '.join((str(minute_difference),
+                                 morph.parse('минута')[0].make_agree_with_number(minute_difference).word,
+                                 "назад"))
+            else:
+                return "сию минуту"
+        else:
+            return ' '.join((str(minute_difference // 60),
+                             morph.parse("час")[0].make_agree_with_number(
+                                 minute_difference // 60).word,
+                             "назад"))
     elif date.day + 1 == current_date_time.day:
         return "Вчера в " + ":".join([hour.lstrip('0'), minute.lstrip('0')])
     else:
-        return day.lstrip('0') + " " + months[int(month)] + " " + year + " в " + ":".join([hour, minute])
+        return day.lstrip('0') + " " + months[int(month)] + " " + year + " в " + ":".join(
+            [hour, minute])
 
 
 def choice_name():

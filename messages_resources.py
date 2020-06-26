@@ -8,7 +8,6 @@ parser = reqparse.RequestParser()
 parser.add_argument("text", required=True)
 parser.add_argument("user_to_id", required=True, type=int)
 parser.add_argument("user_from_id", required=True, type=int)
-# parser.add_argument("is_published", required=True)
 parser.add_argument("id", required=True, type=int)
 parser.add_argument("time", required=True)
 

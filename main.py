@@ -16,12 +16,14 @@ from werkzeug.utils import secure_filename
 
 import messages_resources
 import news_resources
+import comment_resources
 from analize import analyze_image_meme, analyze_image_dog, analyze_image_lion
 from data import db_session
 from data.messages import Message
 from data.news import News
 from data.photos import Photo
 from data.users import User
+from data.comments import Comment
 from forms import BaseForm, RegisterForm, LoginForm, NewsForm, ProfileForm, UsersForm, PasswordForm, \
     MemesForm
 from functions import check_password, get_time, check_like, check_number_of_like
@@ -47,8 +49,10 @@ api.add_resource(news_resources.NewsListResource, "/api/v2/news")
 api.add_resource(news_resources.NewsResource, "/api/v2/news/<int:news_id>")
 api.add_resource(messages_resources.MessagesListResource, "/api/v2/messages")
 api.add_resource(messages_resources.MessagesResource, "/api/v2/messages/<int:message_id>")
+api.add_resource(comment_resources.CommentsListResource, "/api/v2/comments")
+api.add_resource(comment_resources.CommentsResource, "/api/v2/comments/<int:comment_id>")
 
-email_confirmation = False
+mail_confirmation = False
 name = ""
 email = ""
 status = ""
@@ -65,6 +69,7 @@ def get_base():
             base.text_color = "white" if theme == 1 else "black"
             base.back = "#0a0a0a" if theme == 1 else "#f5f5f5"
             base.back_color = "#1e1e1e" if theme == 1 else "#969696"
+            base.more_color = "#4e4e4e" if theme == 1 else "#c6c6c6"
             base.like_image = "like(dark)" if theme == 1 else "like"
         else:
             if theme == 2:
@@ -74,6 +79,7 @@ def get_base():
             base.text_color = "white" if theme == 3 else "black"
             base.back = "#0a0a0a" if theme == 3 else "#f5f5f5"
             base.back_color = "#1e1e1e" if theme == 3 else "#969696"
+            base.more_color = "#2e2e2e" if theme == 3 else "#929292"
             base.like_image = "like(dark)" if theme == 3 else "like"
     else:
         base.background = ""
@@ -826,11 +832,21 @@ def favicon():
                                'favicon.ico', mimetype='image/ico')
 
 
+@app.route("/comment_add/?news_id=<int:news_id>&text=<string:text>")
+def comment_add(news_id):
+    comment = Comment(text='',
+                          user_id=current_user.id,
+                          news_id='')
+    news_id = request.args.get('url_from')
+    return redirect(f"/#{news_id}")
+
+
 @app.route("/")
 def index():
     lst = []
     form = MemesForm()
     session = db_session.create_session()
+    comments = session.query(Comment).all()
     if form.validate_on_submit():
         pass
     else:
@@ -844,7 +860,7 @@ def index():
             news = session.query(News).filter(News.is_private != True)
     return render_template("index.html", news=news, title="Лента", base=get_base(),
                            get_time=get_time, lst=lst, check_like=check_like,
-                           check_number_of_like=check_number_of_like, form=form)
+                           check_number_of_like=check_number_of_like, form=form, comments=comments)
 
 
 @app.route("/cookie_test")

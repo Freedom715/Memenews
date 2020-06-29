@@ -8,8 +8,8 @@ parser = reqparse.RequestParser()
 parser.add_argument("text", required=True)
 parser.add_argument("user_to_id", required=True, type=int)
 parser.add_argument("user_from_id", required=True, type=int)
-parser.add_argument("id", required=True, type=int)
-parser.add_argument("time", required=True)
+# parser.add_argument("id", required=True, type=int)
+# parser.add_argument("time", required=True)
 
 
 def abort_if_messages_not_found(message_id):
@@ -45,16 +45,15 @@ class MessagesListResource(Resource):
             only=("id", "text", "user_from_id", "user_to_id", "time")) for item in messages]})
 
     def post(self):
+        print("a")
         args = parser.parse_args()
+
         session = db_session.create_session()
-        message = Message(
-            id=args["id"],
-            text=args["text"],
-            user_from_id=args["user_from_id"],
-            user_to_id=args["user_to_id"],
-            # is_published=args["is_published"],
-            time=args["time"]
-        )
+
+        message = Message()
+        message.text = args["text"]
+        message.user_from_id = args["user_from_id"]
+        message.user_to_id = args["user_to_id"]
         session.add(message)
         session.commit()
         return jsonify({"success": "OK"})

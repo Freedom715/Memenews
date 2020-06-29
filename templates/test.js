@@ -1,25 +1,4 @@
-{% extends "base.html" %}
-
-{% block content %}
-<!--<meta http-equiv="Refresh" content="1"/>-->
-<div class="col-xl messenger" id="mess">
-
-</div>
-<div class="container-sm mx-auto fixed-bottom">
-    <form action="" method="post" enctype="multipart/form-data">
-        <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="Наберите сообщение"
-                   aria-label="Наберите сообщение" aria-describedby="button-addon2" name="text" id="textInput">
-            <div class="input-group-append">
-                <input class="btn btn-primary" type="button" value="Отправить" OnClick="send_message();">
-            </div>
-        </div>
-    </form>
-</div>
-
-
-<script type="text/javascript">
-var ma = 0;
+var ma = {{messages[-1].id}};
 
 function send_message() {
 var input = document.getElementById("textInput");
@@ -31,15 +10,6 @@ $.ajax({
             response:'json',
             success: function(data) {mode();
                                      input.value = ""},
-        });
-};
-
-function delete_message(id) {
-$.ajax({
-            url: '/api/v2/messages/' + id,
-            type: 'delete',
-            response:'json',
-            success: function(data) {mode();},
         });
 };
 
@@ -64,15 +34,15 @@ function get_time(time) {
 };
 function mode() {
 var form = document.getElementById("mess");
-var ma = 0;
 var input = document.getElementById("textInput");
     $.ajax({
             url: '/api/v2/messages',
             type: 'GET',
             dataType : "json",
             success: function(messages) {
-            form.innerHTML = "";
+<!--            form.innerHTML = "";-->
             $.each(messages.messages, function(i, val) {
+            if (val.id > ma){
                 if (val.user_from_id == {{current_user.id}} && val.user_to_id == {{user_to.id}}) {
                     var ref = document.createElement("a");
                     ref.href = "/profile/{{current_user.id}}";
@@ -95,13 +65,10 @@ var input = document.getElementById("textInput");
                     text.className = "text-break";
                     text.innerHTML = val.text;
                     media_block.appendChild(text);
-                    var button = document.createElement("input");
+                    var button = document.createElement("a");
                     button.className = "btn-sm btn-danger";
-                    button.value = "Удалить";
-                    button.type = "button";
-<!--                    button.href = "/message_delete/" + val.id;-->
-<!--                    button.name = val.id;-->
-                    button.onclick = function() {delete_message(val.id);};
+                    button.text = "Удалить";
+                    button.href="/message_delete/" + val.id;
                     media_block.appendChild(document.createTextNode(get_time(val.time)));
                     media_block.appendChild(document.createElement("br"));
                     media_block.appendChild(button);
@@ -140,14 +107,14 @@ var input = document.getElementById("textInput");
                     form.appendChild(message)
                     if (val.id > ma) {ma = val.id}
                 }
-<!--                alert(i);-->
-                });
-                if (window.location.hash != "#" + ma){
-                $(function(){ window.location.hash = ma; });
-                input.focus();}
                 }
-                });
-
+            }
+            });
+            if (window.location.hash != "#" + ma)
+                {$(function(){ window.location.hash = ma; });}
+                input.focus();
+                }
+            });
 
 
 };

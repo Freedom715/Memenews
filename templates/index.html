@@ -26,7 +26,7 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="col" style="margin-top:15px;">
+            <div class="col-sm" style="margin-top:15px;">
                 {% if current_user.is_authenticated %}
                 <a href="/like_post/{{ item.id }}"><img
                         src="/static/img/images/{{ base.like_image }}{{ check_like(item.id, lst) }}.png"
@@ -34,18 +34,16 @@
                 <p>{{check_number_of_like(item.liked)[0].title()}} {{item.liked}}
                     {{check_number_of_like(item.liked)[1]}}
                     {% endif %}
-                <p>
                 <div style="margin-bottom: 5px; margin-top: 3px">
-                    {% if current_user == item.user %}
-                    {% if item.liked < 3 %}
-                    <div>
+                        {% if current_user == item.user %}
+                        {% if item.liked < 3 %}
+
                         <a href="/news/{{ item.id }}" class="btn btn-block btn-warning"
                            style="margin-bottom:5px">Изменить</a>
                         {% endif %}
                         <input type="button" value="Удалить" class="btn btn-block btn-danger"
                                onclick="delete_news({{item.id}});">
                         {% endif %}
-                    </div>
                 </div>
             </div>
             <div class="col-8" style="margin-left:115px; margin-right:115;">
@@ -124,6 +122,7 @@ function redraw() {
 }
 
 function like(news_id) {}
+
 
 
 

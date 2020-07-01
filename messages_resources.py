@@ -36,7 +36,6 @@ class MessagesResource(Resource):
         return jsonify({"success": "OK"})
 
 
-
 class MessagesListResource(Resource):
     def get(self):
         session = db_session.create_session()

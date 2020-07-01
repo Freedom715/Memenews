@@ -17,6 +17,7 @@ from werkzeug.utils import secure_filename
 import comments_resources
 import messages_resources
 import news_resources
+import likes_resources
 from analize import analyze_image_meme, analyze_image_dog, analyze_image_lion
 from data import db_session
 from data.comments import Comment
@@ -51,6 +52,8 @@ api.add_resource(messages_resources.MessagesListResource, "/api/v2/messages")
 api.add_resource(messages_resources.MessagesResource, "/api/v2/messages/<int:message_id>")
 api.add_resource(comments_resources.CommentsListResource, "/api/v2/comments")
 api.add_resource(comments_resources.CommentsResource, "/api/v2/comments/<int:comment_id>")
+api.add_resource(likes_resources.LikesResource, "/api/v2/like/<int:news_id>")
+
 
 mail_confirmation = False
 name = ""

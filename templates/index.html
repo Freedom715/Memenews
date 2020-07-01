@@ -9,7 +9,7 @@
     {% for item in news[::-1]%}
     <div class="col">
         <div class="row block rounded-lg">
-            <div class="media col-10" style="margin-top:15px">
+            <div class="media col-md" style="margin-top:15px">
                 <a href="/profile/{{item.user.id}}" name="{{item.id}}">
                     <img src="{{item.user.avatar}}"
                          class="align-self-start mr-3 rounded-lg" alt="PEP8"
@@ -26,7 +26,8 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="col-sm" style="margin-top:15px;">
+            <div class="col-4" style="margin-top:15px;">
+                <div style="margin-bottom: 5px; margin-top: 3px">
                 {% if current_user.is_authenticated %}
                 <a href="/like_post/{{ item.id }}"><img
                         src="/static/img/images/{{ base.like_image }}{{ check_like(item.id, lst) }}.png"
@@ -34,57 +35,55 @@
                 <p>{{check_number_of_like(item.liked)[0].title()}} {{item.liked}}
                     {{check_number_of_like(item.liked)[1]}}
                     {% endif %}
-                <div style="margin-bottom: 5px; margin-top: 3px">
-                        {% if current_user == item.user %}
-                        {% if item.liked < 3 %}
-
-                        <a href="/news/{{ item.id }}" class="btn btn-block btn-warning"
-                           style="margin-bottom:5px">Изменить</a>
-                        {% endif %}
-                        <input type="button" value="Удалить" class="btn btn-block btn-danger"
-                               onclick="delete_news({{item.id}});">
-                        {% endif %}
+                </p>
+                    {% if current_user == item.user %}
+                    {% if item.liked < 3 %}
+                    <a href="/news/{{ item.id }}" class="btn btn-block btn-warning"
+                       style="margin-bottom:5px">Изменить</a>
+                    {% endif %}
+                    <input type="button" value="Удалить" class="btn btn-block btn-danger"
+                           onclick="delete_news({{item.id}});">
+                    {% endif %}
                 </div>
             </div>
             <div class="col-8" style="margin-left:115px; margin-right:115;">
-                {% for elem in comments %}
-                {% if elem.news_id == item.id %}
-                <div class="media mt-3 invert_block rounded-lg">
-                    <img src="{{elem.user.avatar}}"
-                         class="align-self-start mr-3 rounded-lg"
-                         width="50"
-                         alt="PEP8">
-                    <div class="media-body">
-                        <h5 class="mt-0 text-break">{{elem.user.name}}</h5>
-                        <p class="text-break"> {{elem.text}} <br>
-                            {% if current_user.id == elem.user.id %}
-                            <button class="btn-sm btn-secondary" style="margin-top"
-                                    onclick="delete_comment({{elem.id}})"> Удалить
-                            </button>
-                            {% endif %}
+                    {% for elem in comments %}
+                    {% if elem.news_id == item.id %}
+                    <div class="media mt-3 invert_block rounded-lg">
+                        <img src="{{elem.user.avatar}}"
+                             class="align-self-start mr-3 rounded-lg"
+                             width="50"
+                             alt="PEP8">
+                        <div class="media-body">
+                            <h5 class="mt-0 text-break">{{elem.user.name}}</h5>
+                            <p class="text-break"> {{elem.text}} <br>
+                                {% if current_user.id == elem.user.id %}
+                                <button class="btn-sm btn-secondary" style="margin-top"
+                                        onclick="delete_comment({{elem.id}})"> Удалить
+                                </button>
+                                {% endif %}
+                        </div>
                     </div>
-                </div>
-                {% endif %}
+                    {% endif %}
 
-                {% endfor %}
-                <div class="input-group mb-3">
-                    <input type="text"
-                           class="form-control"
-                           id="comment{{item.id}}">
-                    <div>
-                        <input type="button"
-                               style="margin-bottom:10px"
-                               class="btn btn-secondary"
-                               value="Отправить"
-                               onclick="add_comment({{item.id}});">
+                    {% endfor %}
+                    <div class="input-group mb-3">
+                        <input type="text"
+                               class="form-control"
+                               id="comment{{item.id}}">
+                        <div>
+                            <input type="button"
+                                   style="margin-bottom:10px"
+                                   class="btn btn-secondary"
+                                   value="Отправить"
+                                   onclick="add_comment({{item.id}});">
+                        </div>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
-    {% endfor %}
-</div>
-<script type="text/javascript">
+        {% endfor %}
+    <script type="text/javascript">
 function add_comment(news_id) {
 var input = document.getElementById("comment" + news_id);
 $.ajax({
@@ -140,5 +139,6 @@ function like(news_id) {}
 
 
 
-</script>
-{% endblock %}
+
+    </script>
+    {% endblock %}

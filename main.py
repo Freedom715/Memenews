@@ -14,16 +14,16 @@ from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 
+import comments_resources
 import messages_resources
 import news_resources
-import comments_resources
 from analize import analyze_image_meme, analyze_image_dog, analyze_image_lion
 from data import db_session
+from data.comments import Comment
 from data.messages import Message
 from data.news import News
 from data.photos import Photo
 from data.users import User
-from data.comments import Comment
 from forms import BaseForm, RegisterForm, LoginForm, NewsForm, ProfileForm, UsersForm, PasswordForm, \
     MemesForm
 from functions import check_password, get_time, check_like, check_number_of_like
@@ -94,14 +94,6 @@ def create_app():
     return app
 
 
-@app.before_request
-def before_request(): # перед каждым запросом проверять новые сообщения
-    # Возможно стоит смотреть во время отправки сообщения находится ли пользователь на странице с диалогом
-    # если нет выводить в сообщения +1
-    # Стоит учитывать и смотреть время
-    pass
-
-
 @login_manager.user_loader
 def load_user(user_id):
     session = db_session.create_session()
@@ -140,32 +132,6 @@ def messenger(user_id):
         return render_template(f"messenger.html", base=get_base(), messages=messages,
                                user_to=user_to,
                                get_time=get_time, last=last, now=datetime.datetime.now())
-    elif request.method == "POST":
-        messages = [elem for elem in
-                    session.query(Message).filter(Message.user_from_id == current_user.id,
-                                                  Message.user_to_id == user_id)]
-        messages += [elem for elem in
-                     session.query(Message).filter(Message.user_to_id == current_user.id,
-                                                   Message.user_from_id == user_id)]
-        messages.sort(key=lambda elem: elem.id)
-        if not messages == []:
-            last = max([elem.id for elem in messages])
-        else:
-            last = False
-        text = request.form.get("text")
-        message = Message()
-        message.text = text
-        message.user_from_id = current_user.id
-        message.user_to_id = session.query(User).filter(User.id == user_id).first().id
-        session.add(message)
-        session.commit()
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
-              "отправил сообщение пользователю",
-              session.query(User).filter(User.id == user_id).first().name)
-        if last:
-            return redirect(f"/messages/{user_id}#{last}")
-        else:
-            return redirect(f"/messages/{user_id}")
 
 
 @app.route("/messages", methods=["GET", "POST"])
@@ -207,28 +173,6 @@ def messages():
     print(message)
     return render_template("messages.html", base=get_base(), people_id=people_id, message=message,
                            people=people, title="Телеграф", form=MemesForm, get_time=get_time)
-
-
-@app.route("/message_delete/<id>", methods=["GET", "POST"])
-@login_required
-def message_delete(id):
-    session = db_session.create_session()
-    message = session.query(Message).filter(Message.id == id,
-                                            Message.user_from_id == current_user.id).first()
-    messages = session.query(Message).filter(or_(Message.user_from_id == current_user.id,
-                                                 Message.user_to_id == current_user.id))
-    if messages:
-        last = max([elem.id for elem in messages])
-    else:
-        last = 0
-    if message:
-        session.delete(message)
-        session.commit()
-        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id,
-              "удалил сообщение", id)
-        return redirect(f"/messages/{message.user_to_id}#{last}")
-    else:
-        abort(404)
 
 
 @app.route("/photo/<photo_id>")
@@ -832,32 +776,20 @@ def favicon():
                                'favicon.ico', mimetype='image/ico')
 
 
-@app.route("/comment_add/?news_id=<int:news_id>&text=<string:text>")
-def comment_add(news_id):
-    comment = Comment(text='',
-                          user_id=current_user.id,
-                          news_id='')
-    news_id = request.args.get('url_from')
-    return redirect(f"/#{news_id}")
-
-
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
     lst = []
     form = MemesForm()
     session = db_session.create_session()
     comments = session.query(Comment).all()
-    if form.validate_on_submit():
-        pass
+    if current_user.is_authenticated:
+        news = session.query(News).filter(
+            (News.user == current_user) | (News.is_private != True))
+        lst = current_user.liked_news
+        if lst:
+            lst = str(lst).strip("'").split(", ")
     else:
-        if current_user.is_authenticated:
-            news = session.query(News).filter(
-                (News.user == current_user) | (News.is_private != True))
-            lst = current_user.liked_news
-            if lst:
-                lst = str(lst).strip("'").split(", ")
-        else:
-            news = session.query(News).filter(News.is_private != True)
+        news = session.query(News).filter(News.is_private != True)
     return render_template("index.html", news=news, title="Лента", base=get_base(),
                            get_time=get_time, lst=lst, check_like=check_like,
                            check_number_of_like=check_number_of_like, form=form, comments=comments)

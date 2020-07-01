@@ -13,7 +13,9 @@
                 <div class="media">
                     <div class="media-body">
                         <h1 class="mt-0">{{form.user.name}}</h1>
+                        <div class="invert_block">
                         <p class="text-break">Статус: {{form.user.status}}</p>
+                            </div>
                         {% if form.user.name != "DELETED" %}
                         {% if current_user.is_authenticated %}
                         {% if form.user.id == current_user.id %}

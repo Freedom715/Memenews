@@ -55,7 +55,7 @@ api.add_resource(comments_resources.CommentsResource, "/api/v2/comments/<int:com
 api.add_resource(likes_resources.LikesResource, "/api/v2/likes/<int:news_id>")
 
 
-mail_confirmation = False
+email_confirmation = False
 name = ""
 email = ""
 status = ""

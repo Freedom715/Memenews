@@ -46,7 +46,7 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="col-8" style="margin-left:115px; margin-right:115;">
+            <div class="col-7" style="margin-left:115px; margin-right:115;">
                 {% for elem in comments %}
                 {% if elem.news_id == item.id %}
                 <div class="media mt-3 invert_block rounded-lg">
@@ -68,7 +68,7 @@
 
                 {% endfor %}
                 {% if current_user.is_authenticated %}
-                <div class="input-group mb-3">
+                <div class="input-group mb-3" style="margin-top:15px">
                     <input type="text"
                            class="form-control"
                            id="comment{{item.id}}">

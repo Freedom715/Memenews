@@ -27,12 +27,12 @@
                     <h2>{{elem.name}}</h2>
                     {% for item in message %}
                     {% if item.user_from_id == elem.id %}
-                     {{item.text}}
+<!--                     {{item.text}}-->
                     <br>
                     {{get_time(item.time.date(), item.time.time())}}
                     {% endif %}
                     {% if item.user_to_id == elem.id %}
-                    Вы: {{item.text}}
+<!--                    Вы: {{item.text}}-->
                     <br>
                     {{get_time(item.time.date(), item.time.time())}}
                     {% endif %}

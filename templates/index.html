@@ -1,87 +1,73 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="col col-xl">
+<div class="col-xl">
     <h1>Новости</h1>
     {% if current_user.is_authenticated %}
     <a href="news" class="btn btn-secondary" style="margin-bottom:10px">Добавить новость</a> <br>
     {% endif %}
     {% for item in news[::-1]%}
-    <div class="col col-xl block rounded-lg">
-        <div class="row">
-            <div class="col col-xl">
-                <div class="media">
-                    <a href="/profile/{{item.user.id}}" name="{{item.id}}">
-                        <img src="{{item.user.avatar}}"
-                             class="align-self-center mr-3 rounded-lg" alt="PEP8"
-                             width="100"
-                             height="100" title="{{item.user.name}}">
-                    </a>
-                    <div class="media-body md-0">
-                        <h2 class="text-break text">{{item.title}}</h2>
-                        <p class="text-break text">
-                            {{item.content}} </p><br>
-                        {% if item.image %}
-                        <img src="{{item.image}}"
-                             class="align-self-center mr-4 w-100 rounded-sm"> <br>
-                        {% else %}
-                        {% for elem in comments %}
-                        {% if elem.news_id == item.id %}
-                        <div class="media mt-3 invert_block rounded-lg">
-                            <img src="{{elem.user.avatar}}"
-                                 class="align-self-center mr-3 width=50 rounded-lg"
-                                 width="50"
-                                 alt="...">
-                            <div class="media-body">
-                                <h5 class="mt-0">{{elem.user.name}}</h5>
-                                <p class="text-break"> {{elem.text}} </p>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% endfor %}
-                        <div class="input-group mb-3">
-                            <input type="text"
-                                   class="form-control"
-                                   id="add_comment{{item.id}}">
-                            <div>
-                                <input type="button"
-                                       style="margin-bottom:10px"
-                                       class="btn btn-secondary"
-                                       value="Отправить"
-                                       onclick="add_comment({{item.id}})">
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        {{get_time(item.created_date.date(), item.created_date.time())}}
-                    </div>
+    <div class="col">
+        <div class="row block rounded-lg">
+            <div class="media col-10" style="margin-top:15px">
+                <a href="/profile/{{item.user.id}}" name="{{item.id}}">
+                    <img src="{{item.user.avatar}}"
+                         class="align-self-start mr-3 rounded-lg" alt="PEP8"
+                         width="100"
+                         height="100" title="{{item.user.name}}">
+                </a>
+                <div class="media-body md-0">
+                    <h2 class="text-break text">{{item.title}}</h2>
+                    <p class="text-break text">
+                        {{item.content}} </p><br>
+                    {% if item.image %}
+                    <img src="{{item.image}}"
+                         class="align-self-center mr-4 w-100 rounded-sm"> <br>
+                    {% endif %}
                 </div>
             </div>
-            <div class="col-4">
+            <div class="col" style="margin-top:15px;">
+                {% if current_user.is_authenticated %}
+                <a href="/like_post/{{ item.id }}"><img
+                        src="/static/img/images/{{ base.like_image }}{{ check_like(item.id, lst) }}.png"
+                        width="100" height="100"></a>
+                <p>{{check_number_of_like(item.liked)[0].title()}} {{item.liked}}
+                    {{check_number_of_like(item.liked)[1]}}
+                    {% endif %}
+                <p>
                 <div style="margin-bottom: 5px; margin-top: 3px">
                     {% if current_user == item.user %}
                     {% if item.liked < 3 %}
-                    <a href="/news/{{ item.id }}" class="btn btn-warning">Изменить</a>
-                    {% endif %}
-                    <input type="button" value="Удалить" class="btn btn-danger"
-                           onclick="delete_news({{item.id}});">
-                    {% endif %}
+                    <div>
+                        <a href="/news/{{ item.id }}" class="btn btn-block btn-warning"
+                           style="margin-bottom:5px">Изменить</a>
+                        {% endif %}
+                        <input type="button" value="Удалить" class="btn btn-block btn-danger"
+                               onclick="delete_news({{item.id}});">
+                        {% endif %}
+                    </div>
                 </div>
-                {% if item.image %}
+            </div>
+            <div class="col-8" style="margin-left:115px; margin-right:115;">
                 {% for elem in comments %}
                 {% if elem.news_id == item.id %}
                 <div class="media mt-3 invert_block rounded-lg">
                     <img src="{{elem.user.avatar}}"
-                         class="align-self-center mr-3 width=50 rounded-lg"
+                         class="align-self-start mr-3 rounded-lg"
                          width="50"
-                         alt="...">
+                         alt="PEP8">
                     <div class="media-body">
                         <h5 class="mt-0 text-break">{{elem.user.name}}</h5>
-                        <p class="text-break"> {{elem.text}}
-                    <button class="btn-sm btn-secondary" onclick="delete_comment({{elem.id}})"> Удалить</button>
+                        <p class="text-break"> {{elem.text}} <br>
+                            {% if current_user.id == elem.user.id %}
+                            <button class="btn-sm btn-secondary" style="margin-top"
+                                    onclick="delete_comment({{elem.id}})"> Удалить
+                            </button>
+                            {% endif %}
                     </div>
                 </div>
                 {% endif %}
+
                 {% endfor %}
                 <div class="input-group mb-3">
                     <input type="text"
@@ -92,27 +78,15 @@
                                style="margin-bottom:10px"
                                class="btn btn-secondary"
                                value="Отправить"
-                               onclick="add_comment({{item.id}})">
+                               onclick="add_comment({{item.id}});">
                     </div>
-                </div>
-                {% endif %}
-                <div>
-                    {% if current_user.is_authenticated %}
-                    <a href="/like_post/{{ item.id }}"> <img
-                            src="/static/img/images/{{ base.like_image }}{{ check_like(item.id, lst) }}.png"
-                            width="100" height="100"></a>
-                    <p>{{check_number_of_like(item.liked)[0].title()}} {{item.liked}}
-                        {{check_number_of_like(item.liked)[1]}}
-                        {% endif %}
-                    <p>
                 </div>
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
-
-    <script type="text/javascript">
+<script type="text/javascript">
 function add_comment(news_id) {
 var input = document.getElementById("comment" + news_id);
 $.ajax({
@@ -151,7 +125,6 @@ function redraw() {
 
 function like(news_id) {}
 
-setInterval(redraw, 10000);
 
 
 
@@ -163,5 +136,10 @@ setInterval(redraw, 10000);
 
 
 
-    </script>
-    {% endblock %}
+
+
+
+
+
+</script>
+{% endblock %}

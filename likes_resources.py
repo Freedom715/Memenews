@@ -1,3 +1,5 @@
+import datetime
+
 from flask import jsonify
 from flask_restful import Resource, abort, reqparse
 from flask_login import current_user
@@ -7,16 +9,17 @@ from data.users import User
 from data.news import News
 
 
-def abort_if_comments_not_found(news_id):
+def abort_if_news_not_found(news_id):
     session = db_session.create_session()
     messages = session.query(News).get(news_id)
     if not messages:
-        abort(404, comment=f"Comment {news_id} not found")
+        abort(404, comment=f"News {news_id} not found")
 
 
 class LikesResource(Resource):
     def get(self, news_id):
-        abort_if_comments_not_found(news_id)
+        news_id = str(news_id)
+        abort_if_news_not_found(news_id)
         session = db_session.create_session()
         news = session.query(News).filter(News.id == news_id).first()
         user = session.query(User).filter(User.id == current_user.id).first()
@@ -41,5 +44,6 @@ class LikesResource(Resource):
             user.liked_news = "'" + ", ".join(user_liked_news) + "'"
             news.liked -= 1
         session.commit()
-        return jsonify({"news": news.to_dict(
-            only=("id", "news_id", "text", "user_id", "liked"))})
+        print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "лайкнул пост",
+              news_id)
+        return jsonify({"Success": "OK"})

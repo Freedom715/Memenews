@@ -3,6 +3,8 @@ from flask_restful import Resource, abort, reqparse
 
 from data import db_session
 from data.news import News
+from data.comments import Comment
+from data.users import User
 
 parser = reqparse.RequestParser()
 parser.add_argument('title', required=True)
@@ -31,6 +33,15 @@ class NewsResource(Resource):
         abort_if_news_not_found(news_id)
         session = db_session.create_session()
         news = session.query(News).get(news_id)
+        comments = session.query(Comment).filter(Comment.news_id == news_id)
+        for elem in comments:
+            session.delete(elem)
+        users = session.query(User).filter(User.liked_news.like(f"%{news_id}%"))
+        for user in users:
+            liked_news = user.liked_news.strip("'").split(", ")
+            liked_news.pop(liked_news.index(str(news_id)))
+            user.liked_news = ", ".join(liked_news)
+        news.liked = 0
         session.delete(news)
         session.commit()
         return jsonify({'success': 'OK'})

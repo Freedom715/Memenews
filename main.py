@@ -52,7 +52,7 @@ api.add_resource(messages_resources.MessagesListResource, "/api/v2/messages")
 api.add_resource(messages_resources.MessagesResource, "/api/v2/messages/<int:message_id>")
 api.add_resource(comments_resources.CommentsListResource, "/api/v2/comments")
 api.add_resource(comments_resources.CommentsResource, "/api/v2/comments/<int:comment_id>")
-api.add_resource(likes_resources.LikesResource, "/api/v2/like/<int:news_id>")
+api.add_resource(likes_resources.LikesResource, "/api/v2/likes/<int:news_id>")
 
 
 mail_confirmation = False
@@ -351,36 +351,6 @@ def return_profile():
           "перешел в свой профиль")
     return redirect(f"/profile/{current_user.id}")
 
-
-@app.route("/like_post/<news_id>", methods=["GET", "POST"])
-def like_news(news_id):
-    session = db_session.create_session()
-    news = session.query(News).filter(News.id == news_id).first()
-    user = session.query(User).filter(User.id == current_user.id).first()
-    lst = user.liked_news
-    if lst:
-        lst = str(lst).strip("'")
-    if user.liked_news == "":
-        user.liked_news = str(news_id)
-        news.liked += 1
-    elif news_id not in lst.split(", "):
-        if ", " not in user.liked_news and current_user.liked_news == "":
-            user.liked_news = "'" + str(news_id) + "'"
-        elif ", " not in user.liked_news and current_user.liked_news != "":
-            user.liked_news = "'" + user.liked_news.strip("'") + ", " + str(news_id) + "'"
-        else:
-            user.liked_news = user.liked_news.rstrip("'") + ", " + str(news_id) + "'"
-        news.liked += 1
-    else:
-        user = session.query(User).filter(User.id == current_user.id).first()
-        user_liked_news = str(user.liked_news).strip("'").split(", ")
-        user_liked_news = list(filter(lambda x: x != news_id, user_liked_news))
-        user.liked_news = "'" + ", ".join(user_liked_news) + "'"
-        news.liked -= 1
-    print(datetime.datetime.now(), current_user.name, "id: ", current_user.id, "лайкнул пост",
-          news_id)
-    session.commit()
-    return redirect(f"/#{news_id}")
 
 
 @app.route("/news", methods=["GET", "POST"])
